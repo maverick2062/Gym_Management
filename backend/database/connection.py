@@ -35,16 +35,13 @@ def setup_database():
             user='root',
             password=os.getenv('MYSQL_PASSWORD')
         )
+        if conn is None:
+            print("Failed to create database connection.")
+            return
         cursor = conn.cursor()
         cursor.execute("CREATE DATABASE IF NOT EXISTS GymDB")
         print("Database 'GymDB' checked/created.")
-        cursor.close()
-        conn.close()
-
-        # Connect to the new database to create tables
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
+        
         # User table (for both Admins and Employees, differentiated by a role)
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS Users (
