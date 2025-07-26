@@ -87,7 +87,7 @@ def login_user():
     try:
         cursor.execute("SELECT * FROM Users WHERE email = %s", (email,))
         user = cursor.fetchone()
-
+        
         if not user:
             return jsonify({"error": "Invalid credentials"}), 401 # 401 Unauthorized
 
