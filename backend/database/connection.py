@@ -71,6 +71,7 @@ def setup_database():
         conn.commit()
         cursor.close()
         conn.close()
+        print("Database setup complete.")
 
     except Error as e:
         print(f"Error during database setup: {e}")
@@ -79,4 +80,4 @@ if __name__ == '__main__':
     # This allows you to run `python connection.py` from the terminal to set up the DB
     print("Setting up the database...")
     setup_database()
-    print("Database setup complete.")
+
