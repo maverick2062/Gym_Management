@@ -42,7 +42,6 @@ def setup_database():
         cursor.execute("CREATE DATABASE IF NOT EXISTS GymDB")
         print("Database 'GymDB' checked/created.")
 
-        cursor.execute("USE GymDB")  # Use the newly created database
         
         # User table (for both Admins and Employees, differentiated by a role)
         cursor.execute('''
