@@ -146,3 +146,37 @@ def delete_member(member_id):
     finally:
         cursor.close()
         conn.close()
+
+@member_bp.route('/stats',methods=['GET'])
+def get_member_stats():
+    """API endpoint to get member statistics."""
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({"error": "Database connection failed"}), 500
+
+    cursor = conn.cursor(dictionary=True)
+    stats={}
+
+    try:
+        # 1. Get total member count
+        cursor.execute("SELECT COUNT(member_id) AS total_members FROM Members")
+        total_results = cursor.fetchone()
+        stats['total_members'] = total_results['total_members'] if total_results else 0
+
+        # 2. Get count of active members
+        cursor.execute("SELECT COUNT(member_id) AS active_members FROM Members WHERE status = 'active'")
+        active_results = cursor.fetchone()
+        stats['active_members'] = active_results['active_members'] if active_results else 0
+
+        # 3. Get member count by plan
+        cursor.execute("SELECT membership_plan,COUNT(member_id) AS count FROM Members Group by membership_plan")
+        plan_counts = cursor.fetchall()
+        stats['plan_distribution'] = {item['membership_plan']: item['count'] for item in plan_counts} # type: ignore
+
+        return jsonify(stats), 200
+
+    except Error as e:
+        return jsonify({"error": f"An error occurred: {e}"}), 500
+    finally:
+        cursor.close()
+        conn.close()

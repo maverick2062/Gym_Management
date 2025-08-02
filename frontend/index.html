@@ -81,6 +81,34 @@
                     </div>
                 </div>
             </div>
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-lg flex items-center">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Total Members</p>
+                            <p id="stats-total-members" class="text-3xl font-bold">0</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg flex items-center">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Monthly Plan</p>
+                            <p id="stats-plan-monthly" class="text-3xl font-bold">0</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg flex items-center">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Quarterly Plan</p>
+                            <p id="stats-plan-quarterly" class="text-3xl font-bold">0</p>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-lg flex items-center">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Yearly Plan</p>
+                            <p id="stats-plan-yearly" class="text-3xl font-bold">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -231,6 +259,17 @@
             }
         }
 
+        async function fetchDashboardStats() {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/members/stats');
+                if (!response.ok) { throw new Error('Could not fetch stats.'); }
+                const stats = await response.json();
+                renderDashboardStats(stats);
+            } catch (error) {
+                console.error('Fetch Stats Error:', error);
+            }
+        }
+
         // --- UI Functions ---
         function renderMembers(members) {
             if (!members || members.length === 0) {
@@ -275,6 +314,7 @@
             dashboardView.classList.remove('hidden');
             userInfo.textContent = `Welcome, ${userData.user.name}!`;
             fetchMembers();
+            fetchDashboardStats();
         }
 
         function showLoginView() {
@@ -304,6 +344,16 @@
                 authButton.textContent = 'Create Account';
                 nameField.classList.remove('hidden');
             }
+        }
+
+        function renderDashboardStats(stats) {
+            document.getElementById('stats-total-members').textContent = stats.total_members || 0;
+            
+            // Use the ?. optional chaining operator to safely get counts.
+            // If a plan doesn't exist in the data, it will show 0 instead of causing an error.
+            document.getElementById('stats-plan-monthly').textContent = stats.plan_distribution?.Monthly || 0;
+            document.getElementById('stats-plan-quarterly').textContent = stats.plan_distribution?.Quarterly || 0;
+            document.getElementById('stats-plan-yearly').textContent = stats.plan_distribution?.Yearly || 0;
         }
         
         // --- Event Listeners ---

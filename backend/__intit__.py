@@ -1,6 +1,6 @@
 from flask import Flask
 from .api.auth_routes import auth_bp
-from .api.member_routes import member_bp # <--- ADD THIS LINE
+from .api.member_routes import member_bp 
 
 def create_app():
     app = Flask(__name__)
