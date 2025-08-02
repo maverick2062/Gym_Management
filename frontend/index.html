@@ -72,6 +72,7 @@
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Plan</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Join Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="member-list" class="bg-white divide-y divide-gray-200">
@@ -192,6 +193,43 @@
                 alert(error.message);
             }
         }
+        async function updateMember(memberId, memberData) {
+            try {
+                const response = await fetch(`http://127.0.0.1:5000/api/members/update/${memberId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(memberData),
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to update member.');
+                }
+                fetchMembers(); // Refresh the list
+                memberModal.classList.remove('active'); // Close modal on success
+            } catch (error) {
+                console.error('Update Member Error:', error);
+                alert(error.message);
+            }
+        }
+
+        async function deleteMember(memberId) {
+            if (!confirm('Are you sure you want to delete this member?')) {
+                return;
+            }
+            try {
+                const response = await fetch(`http://127.0.0.1:5000/api/members/delete/${memberId}`, {
+                    method: 'DELETE',
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to delete member.');
+                }
+                fetchMembers(); // Refresh the list to show the member has been removed
+            } catch (error) {
+                console.error('Delete Member Error:', error);
+                alert(error.message);
+            }
+        }
 
         // --- UI Functions ---
         function renderMembers(members) {
@@ -208,10 +246,28 @@
                         <td class="px-6 py-4 whitespace-nowrap">${member.email}</td>
                         <td class="px-6 py-4 whitespace-nowrap">${member.membership_plan}</td>
                         <td class="px-6 py-4 whitespace-nowrap">${joinDate}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button onclick='openEditModal(${JSON.stringify(member)})' class="text-indigo-600 hover:text-indigo-900 mr-4">Edit</button>
+                            <button onclick='deleteMember(${member.member_id})' class="text-red-600 hover:text-red-900">Delete</button>
+                        </td>
                     </tr>
                 `;
             });
             memberList.innerHTML = html;
+        }
+
+        function openEditModal(member) {
+            // Set a data attribute on the form to store the member's ID
+            memberForm.dataset.editingId = member.member_id;
+            
+            // Pre-fill the form fields
+            document.getElementById('modal-title').textContent = 'Edit Member';
+            document.getElementById('member-name').value = member.name;
+            document.getElementById('member-email').value = member.email;
+            document.getElementById('member-plan').value = member.membership_plan;
+            
+            // Show the modal
+            memberModal.classList.add('active');
         }
         
         function showDashboard(userData) {
@@ -294,7 +350,14 @@
                 email: document.getElementById('member-email').value,
                 membership_plan: document.getElementById('member-plan').value,
             };
-            addMember(memberData);
+
+            // Check if we are editing or adding
+            const editingId = e.target.dataset.editingId;
+            if (editingId) {
+                updateMember(editingId, memberData);
+            } else {
+                addMember(memberData);
+            }
         });
     </script>
 </body>
