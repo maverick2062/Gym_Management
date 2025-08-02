@@ -85,6 +85,10 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div class="bg-white p-6 rounded-xl shadow-lg flex items-center">
                         <div>
+                            <p class="text-sm font-medium text-gray-500">Active Members</p>
+                            <p id="stats-active-members" class="text-3xl font-bold text-green-500">0</p>
+                        </div>
+                        <div>
                             <p class="text-sm font-medium text-gray-500">Total Members</p>
                             <p id="stats-total-members" class="text-3xl font-bold">0</p>
                         </div>
@@ -347,6 +351,7 @@
         }
 
         function renderDashboardStats(stats) {
+            document.getElementById('stats-active-members').textContent = stats.active_members || 0;
             document.getElementById('stats-total-members').textContent = stats.total_members || 0;
             
             // Use the ?. optional chaining operator to safely get counts.
