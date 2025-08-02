@@ -6,7 +6,7 @@
     <title>Gym Management System</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100">
+<body class="bg-gray-100 text-gray-800">
 
     <div id="auth-view" class="flex items-center justify-center min-h-screen">
         <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
@@ -39,7 +39,41 @@
     </div>
 
     <div id="dashboard-view" class="hidden">
-        </div>
+        <nav class="bg-white shadow">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-16">
+                    <div class="flex items-center">
+                        <span class="text-xl font-bold">GymMonk Dashboard</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span id="user-info" class="mr-4 text-sm text-gray-600"></span>
+                        <button id="logout-button" class="px-3 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        <main class="py-10">
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-semibold mb-4">Member Management</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Plan</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Join Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="member-list" class="bg-white divide-y divide-gray-200">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
 
     <script>
         // DOM Elements
@@ -52,74 +86,136 @@
         const authButton = document.getElementById('auth-button');
         const nameField = document.getElementById('name-field');
         const toggleAuthModeLink = document.getElementById('toggle-auth-mode');
+        const userInfo = document.getElementById('user-info');
+        const memberList = document.getElementById('member-list');
+        const logoutButton = document.getElementById('logout-button');
         
         let isLoginMode = true;
 
         // --- API Functions ---
         async function loginUser(email, password) {
-            // ... (this function is unchanged) ...
+            const response = await fetch('http://127.0.0.1:5000/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Login failed.');
+            }
+            return data;
         }
 
-        // --- NEW: Function to register a new user ---
         async function registerUser(name, email, password) {
+            const response = await fetch('http://127.0.0.1:5000/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, password })
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Registration failed.');
+            }
+            alert('Registration successful! Please log in.');
+            toggleMode(true); // Switch back to login mode
+        }
+
+        async function fetchMembers() {
             try {
-                const response = await fetch('/api/auth/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, password })
-                });
-                const data = await response.json();
+                const response = await fetch('http://127.0.0.1:5000/api/members');
                 if (!response.ok) {
-                    throw new Error(data.error || 'Registration failed.');
+                    throw new Error('Could not fetch members.');
                 }
-                alert('Registration successful! Please log in.');
-                toggleMode(true); // Switch back to login mode
+                const members = await response.json();
+                renderMembers(members);
             } catch (error) {
-                console.error('Registration Error:', error);
-                authError.textContent = error.message;
+                console.error('Fetch Members Error:', error);
+                memberList.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-500">${error.message}</td></tr>`;
             }
         }
 
         // --- UI Functions ---
+        function renderMembers(members) {
+            if (!members || members.length === 0) {
+                memberList.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-500">No members found.</td></tr>`;
+                return;
+            }
+            let html = '';
+            members.forEach(member => {
+                const joinDate = new Date(member.join_date).toLocaleDateString('en-GB');
+                html += `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">${member.name}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${member.email}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${member.membership_plan}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${joinDate}</td>
+                    </tr>
+                `;
+            });
+            memberList.innerHTML = html;
+        }
+        
+        function showDashboard(userData) {
+            authView.classList.add('hidden');
+            dashboardView.classList.remove('hidden');
+            userInfo.textContent = `Welcome, ${userData.user.name}!`;
+            fetchMembers();
+        }
+
+        function showLoginView() {
+            authView.classList.remove('hidden');
+            dashboardView.classList.add('hidden');
+            authForm.reset();
+            authError.textContent = '';
+        }
+
         function toggleMode(forceLogin = null) {
             isLoginMode = (forceLogin !== null) ? forceLogin : !isLoginMode;
             authForm.reset();
             authError.textContent = '';
             if (isLoginMode) {
                 authTitle.textContent = 'Sign in to your account';
-                authSubtitle.innerHTML = 'Or <a href="#" id="toggle-auth-mode" class="font-medium text-indigo-600 hover:text-indigo-500">create a new account</a>';
+                authSubtitle.innerHTML = 'Or <a href="#" id="toggle-auth-mode-link" class="font-medium text-indigo-600 hover:text-indigo-500">create a new account</a>';
                 authButton.textContent = 'Sign in';
                 nameField.classList.add('hidden');
             } else {
                 authTitle.textContent = 'Create a new account';
-                authSubtitle.innerHTML = 'Or <a href="#" id="toggle-auth-mode" class="font-medium text-indigo-600 hover:text-indigo-500">sign in to your account</a>';
+                authSubtitle.innerHTML = 'Or <a href="#" id="toggle-auth-mode-link" class="font-medium text-indigo-600 hover:text-indigo-500">sign in to your account</a>';
                 authButton.textContent = 'Create Account';
                 nameField.classList.remove('hidden');
             }
-            // Re-add event listener
-            document.getElementById('toggle-auth-mode').addEventListener('click', (e) => {
+            document.getElementById('toggle-auth-mode-link').addEventListener('click', (e) => {
                 e.preventDefault();
                 toggleMode();
             });
         }
         
         // --- Event Listeners ---
-        authForm.addEventListener('submit', (e) => {
+        authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = authForm.email.value;
             const password = authForm.password.value;
             authError.textContent = '';
             if (isLoginMode) {
-                loginUser(email, password);
-_            } else {
+                try {
+                    const userData = await loginUser(email, password);
+                    showDashboard(userData);
+                } catch (error) {
+                    authError.textContent = error.message;
+                }
+            } else {
                 const name = authForm.name.value;
-                registerUser(name, email, password);
+                await registerUser(name, email, password);
             }
         });
 
         toggleAuthModeLink.addEventListener('click', (e) => {
             e.preventDefault();
             toggleMode();
+        });
+
+        logoutButton.addEventListener('click', () => {
+            showLoginView();
         });
 
     </script>
