@@ -176,6 +176,12 @@
         const memberForm = document.getElementById('member-form');
         
         let isLoginMode = true;
+        let currentUserRole = null;
+
+        // --- Helper function to get the token ---
+        function getToken() {
+            return localStorage.getItem('jwt_token');
+        }
 
         // --- API Functions ---
         async function loginUser(email, password) {
@@ -186,6 +192,10 @@
             });
             const data = await response.json();
             if (!response.ok) { throw new Error(data.error || 'Login failed.'); }
+
+             // ** NEW: Save the token on successful login **
+            localStorage.setItem('jwt_token', data.token);
+
             return data;
         }
 
@@ -203,7 +213,11 @@
 
         async function fetchMembers() {
             try {
-                const response = await fetch('http://127.0.0.1:5000/api/members/'); // Added trailing slash for consistency
+                const response = await fetch('http://127.0.0.1:5000/api/members/', {// Added trailing slash for consistency
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`
+                    }
+                });
                 if (!response.ok) { throw new Error('Could not fetch members.'); }
                 const members = await response.json();
                 renderMembers(members);
@@ -215,9 +229,13 @@
 
         async function addMember(memberData) {
             try {
+                // ** NEW: Add Authorization header with the token **
                 const response = await fetch('http://127.0.0.1:5000/api/members/add', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getToken()}`
+                    },
                     body: JSON.stringify(memberData),
                 });
                 if (!response.ok) {
@@ -233,9 +251,13 @@
         }
         async function updateMember(memberId, memberData) {
             try {
+                // ** NEW: Add Authorization header with the token **
                 const response = await fetch(`http://127.0.0.1:5000/api/members/update/${memberId}`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getToken()}`
+                    },
                     body: JSON.stringify(memberData),
                 });
                 if (!response.ok) {
@@ -255,8 +277,12 @@
                 return;
             }
             try {
+                // ** NEW: Add Authorization header with the token **
                 const response = await fetch(`http://127.0.0.1:5000/api/members/delete/${memberId}`, {
                     method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`
+                    }
                 });
                 if (!response.ok) {
                     const errorData = await response.json();
@@ -328,6 +354,8 @@
         }
 
         function showLoginView() {
+            // Clear the token from storage
+            localStorage.removeItem('jwt_token');
             authView.classList.remove('hidden');
             dashboardView.classList.add('hidden');
             authForm.reset();
@@ -335,6 +363,23 @@
             // Reset to login mode view
             if (!isLoginMode) {
                 toggleMode(true);
+            }
+        }
+
+        // ** NEW: Add a function to check login status on page load **
+        function checkLoginStatus() {
+            const token = getToken();
+            if (token) {
+                // A simple check. A more robust app would verify the token with the backend.
+                // For now, we'll just show the dashboard.
+                // We need to decode the token to get the user's name.
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    showDashboard({ user: { name: payload.name } });
+                } catch (e) {
+                    // If token is invalid, show login page
+                    showLoginView();
+                }
             }
         }
 
@@ -402,7 +447,7 @@
 
         cancelModalBtn.addEventListener('click', () => {
             memberModal.classList.remove('active');
-});
+        });
 
         memberForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -420,6 +465,10 @@
                 addMember(memberData);
             }
         });
+
+        // ** NEW: Call the checkLoginStatus function when the page loads **
+        document.addEventListener('DOMContentLoaded', checkLoginStatus);
+
     </script>
 </body>
 </html>
