@@ -1,3 +1,4 @@
+from .auth_routes import token_required
 from flask import Blueprint, request, jsonify
 from mysql.connector import Error
 from datetime import date
@@ -30,6 +31,7 @@ def fetch_all_members_from_db():
 # --- API ROUTES ---
 
 @member_bp.route('/', methods=['GET'])
+@token_required
 def get_all_members():
     "API endpoint to get a list of all members."
     members, error = fetch_all_members_from_db()
@@ -38,6 +40,7 @@ def get_all_members():
     return jsonify(members), 200
 
 @member_bp.route('/add', methods=['POST'])
+@token_required
 def add_member():
     """API endpoint to add a new member."""
     data = request.get_json()
@@ -82,6 +85,7 @@ def add_member():
 
 
 @member_bp.route('/update/<int:member_id>', methods=['PUT'])
+@token_required
 def update_member(member_id):
     """API endpoint to update an existing member."""
     data = request.get_json()
@@ -125,6 +129,7 @@ def update_member(member_id):
 
 
 @member_bp.route('/delete/<int:member_id>', methods=['DELETE'])
+@token_required
 def delete_member(member_id):
     """API endpoint to delete a member."""
     conn = get_db_connection()
@@ -148,6 +153,7 @@ def delete_member(member_id):
         conn.close()
 
 @member_bp.route('/stats',methods=['GET'])
+@token_required
 def get_member_stats():
     """API endpoint to get member statistics."""
     conn = get_db_connection()
