@@ -1,6 +1,10 @@
 from flask import Blueprint, request, jsonify
 from mysql.connector import Error
 import re # For email validation
+import jwt
+import os
+from datetime import datetime, timedelta
+from functools import wraps
 
 # Go up one directory to import from database and core
 import sys
@@ -8,6 +12,33 @@ sys.path.append('..')
 
 from database.connection import get_db_connection
 from core.security import hash_password, verify_password
+
+def token_required(f):
+    """Decorator to protect routes with JWT authentication."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        if 'Authorization' in request.headers:
+            # Expected format: "Bearer <token>"
+            token = request.headers['Authorization'].split(" ")[1]
+
+        if not token:
+            return jsonify({'message': 'Authentication token is missing!'}), 401
+
+        secret_key = os.getenv('SECRET_KEY')
+        try:
+            # Decode the token and get the user payload
+            data = jwt.decode(token, secret_key, algorithms=['HS256'])
+            current_user = data
+        except jwt.ExpiredSignatureError:
+            return jsonify({'message': 'Token has expired!'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'message': 'Token is invalid!'}), 401
+
+        # Pass the user data to the route
+        return f(current_user, *args, **kwargs)
+
+    return decorated
 
 # A Blueprint is a way to organize a group of related views and other code.
 # Rather than registering views and other code directly with an application,
@@ -92,21 +123,27 @@ def login_user():
             return jsonify({"error": "Invalid credentials"}), 401 # 401 Unauthorized
 
         if not verify_password(password, user['password']):
+            cursor.close()
+            conn.close()
             return jsonify({"error": "Invalid credentials"}), 401
+        
+        cursor.close()
+        conn.close()
 
         # In a real app, you would return a JWT (JSON Web Token) here for session management
         # For now, we'll return a simple success message and user info
         user_info = {
             "user_id": user['user_id'],
             "name": user['name'],
-            "email": user['email'],
-            "role": user['role']
+            "role": user['role'],
+            'exp': datetime.utcnow() + timedelta(hours=24) 
         }
-        
-        return jsonify({
-            "message": "Login successful!",
-            "user": user_info
-        }), 200
+
+         # Generate the token
+        secret_key = os.getenv('SECRET_KEY')
+        token = jwt.encode(user_info, secret_key, algorithm='HS256')
+
+        return jsonify({'message': 'Login successful', 'token': token})
 
     except Error as e:
         return jsonify({"error": f"An error occurred: {e}"}), 500
