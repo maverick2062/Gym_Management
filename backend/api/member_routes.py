@@ -49,7 +49,9 @@ def add_member(current_user):
 
     name = data['name']
     email = data['email']
-    phone_number = data.get('phone_number', '')
+    phone_number = data.get('phone_number')
+    gender = data.get('gender')
+    date_of_birth = data.get('date_of_birth')
     membership_plan = data['membership_plan']
     join_date = date.today().strftime('%Y-%m-%d')
 
@@ -64,10 +66,9 @@ def add_member(current_user):
         cursor.execute("SELECT email FROM Members WHERE email = %s", (email,))
         if cursor.fetchone():
             return jsonify({"error": "A member with this email already exists"}), 409
-        cursor.execute(
-            "INSERT INTO Members (name, email, phone_number, membership_plan, join_date) VALUES (%s, %s, %s, %s, %s)",
-            (name, email, phone_number, membership_plan, join_date)
-        )
+        sql = """INSERT INTO Members (name, email, phone_number, gender, date_of_birth, membership_plan, join_date)
+                 VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+        cursor.execute(sql, (name, email, phone_number, gender, date_of_birth, membership_plan, join_date))
         conn.commit()
 
         #  Return the newly created member's data
@@ -97,7 +98,7 @@ def update_member(current_user,member_id):
     values = []
     for key, value in data.items():
         # Ensure only valid columns are updated
-        if key in ['name', 'email', 'phone_number', 'membership_plan', 'status']:
+        if key in ['name', 'email', 'phone_number', 'membership_plan', 'status', 'gender', 'date_of_birth']:
             fields_to_update.append(f"{key} = %s")
             values.append(value)
 

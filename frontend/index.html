@@ -136,6 +136,24 @@
                         <input type="email" id="member-email" required class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md">
                     </div>
                     <div>
+                        <label for="member-phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                        <input type="tel" id="member-phone" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="member-gender" class="block text-sm font-medium text-gray-700">Gender</label>
+                            <select id="member-gender" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md">
+                                <option>Male</option>
+                                <option>Female</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="member-dob" class="block text-sm font-medium text-gray-700">Date of Birth</label>
+                            <input type="date" id="member-dob" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md">
+                        </div>
+                    </div>
+                    <div>
                         <label for="member-plan" class="block text-sm font-medium text-gray-700">Membership Plan</label>
                         <select id="member-plan" required class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md">
                             <option>Monthly</option>
@@ -143,14 +161,6 @@
                             <option>Yearly</option>
                         </select>
                     </div>
-                </div>
-                <div class="items-center px-4 py-3 mt-5 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 sm:ml-3 sm:w-auto sm:text-sm">
-                        Save Member
-                    </button>
-                    <button type="button" id="cancel-modal-btn" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-                        Cancel
-                    </button>
                 </div>
             </form>
         </div>
@@ -365,16 +375,18 @@
         }
 
         function openEditModal(member) {
-            // Set a data attribute on the form to store the member's ID
             memberForm.dataset.editingId = member.member_id;
             
-            // Pre-fill the form fields
+            // Pre-fill all fields, including the new ones
             document.getElementById('modal-title').textContent = 'Edit Member';
-            document.getElementById('member-name').value = member.name;
-            document.getElementById('member-email').value = member.email;
-            document.getElementById('member-plan').value = member.membership_plan;
+            document.getElementById('member-name').value = member.name || '';
+            document.getElementById('member-email').value = member.email || '';
+            document.getElementById('member-phone').value = member.phone_number || '';
+            document.getElementById('member-gender').value = member.gender || 'Male';
+            // Format date correctly for the input field
+            document.getElementById('member-dob').value = member.date_of_birth ? new Date(member.date_of_birth).toISOString().split('T')[0] : '';
+            document.getElementById('member-plan').value = member.membership_plan || 'Monthly';
             
-            // Show the modal
             memberModal.classList.add('active');
         }
         
@@ -487,21 +499,26 @@
         });
 
         memberForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const memberData = {
-                name: document.getElementById('member-name').value,
-                email: document.getElementById('member-email').value,
-                membership_plan: document.getElementById('member-plan').value,
-            };
+        e.preventDefault();
+        
+        // Collect data from all form fields
+        const memberData = {
+            name: document.getElementById('member-name').value,
+            email: document.getElementById('member-email').value,
+            phone_number: document.getElementById('member-phone').value,
+            gender: document.getElementById('member-gender').value,
+            date_of_birth: document.getElementById('member-dob').value,
+            membership_plan: document.getElementById('member-plan').value,
+        };
 
-            // Check if we are editing or adding
-            const editingId = e.target.dataset.editingId;
-            if (editingId) {
-                updateMember(editingId, memberData);
-            } else {
-                addMember(memberData);
-            }
-        });
+        // Check if we are editing or adding
+        const editingId = e.target.dataset.editingId;
+        if (editingId) {
+            updateMember(editingId, memberData);
+        } else {
+            addMember(memberData);
+        }
+    });
 
         // ** NEW: Call the checkLoginStatus function when the page loads **
         document.addEventListener('DOMContentLoaded', checkLoginStatus);
