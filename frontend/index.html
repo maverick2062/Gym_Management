@@ -195,6 +195,8 @@
 
              // ** NEW: Save the token on successful login **
             localStorage.setItem('jwt_token', data.token);
+            const payload = JSON.parse(atob(data.token.split('.')[1]));
+            currentUserRole = payload.role; // <-- ADD THIS LINE
 
             return data;
         }
@@ -297,7 +299,11 @@
 
         async function fetchDashboardStats() {
             try {
-                const response = await fetch('http://127.0.0.1:5000/api/members/stats');
+                const response = await fetch('http://127.0.0.1:5000/api/members/stats',{
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`
+                    }
+                });
                 if (!response.ok) { throw new Error('Could not fetch stats.'); }
                 const stats = await response.json();
                 renderDashboardStats(stats);
@@ -309,22 +315,34 @@
         // --- UI Functions ---
         function renderMembers(members) {
             if (!members || members.length === 0) {
-                memberList.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-500">No members found.</td></tr>`;
+                // Note: Colspan is 5 to account for the Actions column
+                memberList.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500">No members found.</td></tr>`;
                 return;
             }
             let html = '';
             members.forEach(member => {
                 const joinDate = new Date(member.join_date).toLocaleDateString('en-GB');
+                
+                // THE SECURITY CHECK: Conditionally add action buttons only for admins
+                let actionButtons = '';
+                if (currentUserRole === 'admin') {
+                    actionButtons = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button onclick='openEditModal(${JSON.stringify(member)})' class="text-indigo-600 hover:text-indigo-900 mr-4">Edit</button>
+                            <button onclick='deleteMember(${member.member_id})' class="text-red-600 hover:text-red-900">Delete</button>
+                        </td>
+                    `;
+                } else {
+                    actionButtons = `<td class="px-6 py-4"></td>`; // Render an empty cell for non-admins
+                }
+
                 html += `
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap">${member.name}</td>
                         <td class="px-6 py-4 whitespace-nowrap">${member.email}</td>
                         <td class="px-6 py-4 whitespace-nowrap">${member.membership_plan}</td>
                         <td class="px-6 py-4 whitespace-nowrap">${joinDate}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button onclick='openEditModal(${JSON.stringify(member)})' class="text-indigo-600 hover:text-indigo-900 mr-4">Edit</button>
-                            <button onclick='deleteMember(${member.member_id})' class="text-red-600 hover:text-red-900">Delete</button>
-                        </td>
+                        ${actionButtons} 
                     </tr>
                 `;
             });
@@ -356,6 +374,8 @@
         function showLoginView() {
             // Clear the token from storage
             localStorage.removeItem('jwt_token');
+            currentUserRole = null; // Reset the user role
+            
             authView.classList.remove('hidden');
             dashboardView.classList.add('hidden');
             authForm.reset();
