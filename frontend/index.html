@@ -183,6 +183,21 @@
             return localStorage.getItem('jwt_token');
         }
 
+        // --- Helper function to parse JWT ---
+        function parseJwt(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                return null;
+            }
+        }
+
         // --- API Functions ---
         async function loginUser(email, password) {
             const response = await fetch('http://127.0.0.1:5000/api/auth/login', {
@@ -195,7 +210,7 @@
 
              // ** NEW: Save the token on successful login **
             localStorage.setItem('jwt_token', data.token);
-            const payload = JSON.parse(atob(data.token.split('.')[1]));
+            const payload = parseJwt(data.token);
             currentUserRole = payload.role; // <-- ADD THIS LINE
 
             return data;
@@ -394,7 +409,7 @@
                 // For now, we'll just show the dashboard.
                 // We need to decode the token to get the user's name.
                 try {
-                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const payload = parseJwt(token);
                     showDashboard({ user: { name: payload.name } });
                 } catch (e) {
                     // If token is invalid, show login page
