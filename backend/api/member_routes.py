@@ -32,7 +32,7 @@ def fetch_all_members_from_db():
 
 @member_bp.route('/', methods=['GET'])
 @token_required
-def get_all_members():
+def get_all_members(current_user):
     "API endpoint to get a list of all members."
     members, error = fetch_all_members_from_db()
     if error:
@@ -41,7 +41,7 @@ def get_all_members():
 
 @member_bp.route('/add', methods=['POST'])
 @token_required
-def add_member():
+def add_member(current_user):
     """API endpoint to add a new member."""
     data = request.get_json()
     if not data or not data.get('name') or not data.get('email') or not  data.get('membership_plan'):
@@ -86,7 +86,7 @@ def add_member():
 
 @member_bp.route('/update/<int:member_id>', methods=['PUT'])
 @token_required
-def update_member(member_id):
+def update_member(current_user,member_id):
     """API endpoint to update an existing member."""
     data = request.get_json()
     if not data:
@@ -130,7 +130,7 @@ def update_member(member_id):
 
 @member_bp.route('/delete/<int:member_id>', methods=['DELETE'])
 @token_required
-def delete_member(member_id):
+def delete_member(current_user,member_id):
     """API endpoint to delete a member."""
     conn = get_db_connection()
     if not conn:
@@ -154,7 +154,7 @@ def delete_member(member_id):
 
 @member_bp.route('/stats',methods=['GET'])
 @token_required
-def get_member_stats():
+def get_member_stats(current_user):
     """API endpoint to get member statistics."""
     conn = get_db_connection()
     if not conn:
