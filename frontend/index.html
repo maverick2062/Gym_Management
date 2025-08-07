@@ -381,7 +381,9 @@
         function showDashboard(userData) {
             authView.classList.add('hidden');
             dashboardView.classList.remove('hidden');
-            userInfo.textContent = `Welcome, ${userData.user.name}!`;
+            const token = getToken();
+            const payload = parseJwt(token);
+            userInfo.textContent = `Welcome, ${payload.name}!`;
             fetchMembers();
             fetchDashboardStats();
         }
@@ -391,6 +393,8 @@
             localStorage.removeItem('jwt_token');
             currentUserRole = null; // Reset the user role
             
+            memberList.innerHTML = '';
+
             authView.classList.remove('hidden');
             dashboardView.classList.add('hidden');
             authForm.reset();
@@ -405,14 +409,12 @@
         function checkLoginStatus() {
             const token = getToken();
             if (token) {
-                // A simple check. A more robust app would verify the token with the backend.
-                // For now, we'll just show the dashboard.
-                // We need to decode the token to get the user's name.
-                try {
-                    const payload = parseJwt(token);
+                const payload = parseJwt(token);
+                if (payload) {
+                    currentUserRole = payload.role; // Set the global role
                     showDashboard({ user: { name: payload.name } });
-                } catch (e) {
-                    // If token is invalid, show login page
+                } else {
+                    // If token is invalid or expired
                     showLoginView();
                 }
             }
