@@ -45,14 +45,14 @@ def add_member(current_user):
     """API endpoint to add a new member."""
     data = request.get_json()
     if not data or not data.get('name') or not data.get('email') or not  data.get('membership_plan'):
-        return jsonify({"error": "Missing required fields: name, email, or membership_plan"}), 400
+        return jsonify({"error": "Missing required fields"}), 400
 
     name = data['name']
     email = data['email']
+    membership_plan = data['membership_plan']
     phone_number = data.get('phone_number')
     gender = data.get('gender')
     date_of_birth = data.get('date_of_birth')
-    membership_plan = data['membership_plan']
     join_date = date.today().strftime('%Y-%m-%d')
 
     conn = get_db_connection()
@@ -96,9 +96,10 @@ def update_member(current_user,member_id):
     # Building the query dynamically based on provided fields
     fields_to_update = []
     values = []
+    valid_fields = ['name', 'email', 'phone_number', 'membership_plan', 'status', 'gender', 'date_of_birth']
     for key, value in data.items():
         # Ensure only valid columns are updated
-        if key in ['name', 'email', 'phone_number', 'membership_plan', 'status', 'gender', 'date_of_birth']:
+        if key in valid_fields:
             fields_to_update.append(f"{key} = %s")
             values.append(value)
 
@@ -123,6 +124,7 @@ def update_member(current_user,member_id):
         return jsonify({"message": f"Member with ID {member_id} updated successfully."}), 200
 
     except Error as e:
+        conn.rollback()
         return jsonify({"error": f"An error occurred: {e}"}), 500
     finally:
         cursor.close()
@@ -148,6 +150,7 @@ def delete_member(current_user,member_id):
         return jsonify({"message": f"Member with ID {member_id} deleted successfully."}), 200
 
     except Error as e:
+        conn.rollback()
         return jsonify({"error": f"An error occurred: {e}"}), 500
     finally:
         cursor.close()
