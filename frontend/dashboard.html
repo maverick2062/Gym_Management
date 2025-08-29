@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GymMonk - Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* A dark gray background */
+        }
+        .sidebar {
+            transition: transform 0.3s ease-in-out;
+        }
+        .modal {
+            transition: opacity 0.3s ease;
+        }
+    </style>
+</head>
+<body class="text-gray-200">
+
+    <!-- Main Container -->
+    <div class="flex h-screen bg-gray-900">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-gray-800 text-white flex-shrink-0 sidebar">
+            <div class="p-6 text-2xl font-bold border-b border-gray-700">
+                GymMonk
+            </div>
+            <nav class="mt-6">
+                <!-- Navigation links will be populated by JavaScript -->
+                <div id="nav-links"></div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header -->
+            <header class="flex justify-between items-center p-4 bg-gray-800 border-b border-gray-700">
+                <h1 class="text-xl font-semibold">Dashboard</h1>
+                <div class="flex items-center">
+                    <div class="mr-4 text-right">
+                        <p id="user-name" class="font-semibold text-white"></p>
+                        <p id="user-role" class="text-sm text-gray-400"></p>
+                    </div>
+                    <button id="logout-button" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition">
+                        Logout
+                    </button>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="flex-1 p-6 overflow-y-auto">
+                <!-- Welcome Message -->
+                <div id="welcome-message" class="mb-6 p-4 bg-gray-800 rounded-lg">
+                    Welcome to your dashboard! Select an option from the sidebar to get started.
+                </div>
+                
+                <!-- Dynamic Content Area -->
+                <div id="content-area">
+                    <!-- Content will be loaded here by JavaScript -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Modal -->
+    <div id="form-modal" class="modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden opacity-0">
+        <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md">
+            <h2 id="modal-title" class="text-2xl font-bold mb-6 text-white"></h2>
+            <form id="modal-form">
+                <!-- Form fields will be dynamically inserted here -->
+                <div id="form-fields"></div>
+                <div class="mt-8 flex justify-end space-x-4">
+                    <button type="button" id="cancel-button" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg font-semibold">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-semibold">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        const API_BASE_URL = 'http://127.0.0.1:5000/api';
+
+        // --- DOM Elements ---
+        const userNameDisplay = document.getElementById('user-name');
+        const userRoleDisplay = document.getElementById('user-role');
+        const logoutButton = document.getElementById('logout-button');
+        const navLinksContainer = document.getElementById('nav-links');
+        const contentArea = document.getElementById('content-area');
+        const formModal = document.getElementById('form-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalForm = document.getElementById('modal-form');
+        const formFields = document.getElementById('form-fields');
+        const cancelButton = document.getElementById('cancel-button');
+
+        // --- JWT and Authentication ---
+        
+        function decodeToken(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                console.error("Failed to decode token:", e);
+                return null;
+            }
+        }
+
+        function initializeDashboard() {
+            const token = localStorage.getItem('jwt_token');
+            if (!token) {
+                window.location.href = 'index.html';
+                return;
+            }
+            const userData = decodeToken(token);
+            if (!userData || userData.exp * 1000 < Date.now()) {
+                localStorage.removeItem('jwt_token');
+                window.location.href = 'index.html';
+                return;
+            }
+            setupUI(userData);
+        }
+
+        // --- UI Setup ---
+
+        function setupUI(userData) {
+            userNameDisplay.textContent = userData.name || userData.username;
+            userRoleDisplay.textContent = userData.role.charAt(0).toUpperCase() + userData.role.slice(1);
+
+            const roles = {
+                member: [
+                    { name: 'My Profile', icon: 'fa-user' },
+                    { name: 'Workout Plan', icon: 'fa-dumbbell' }
+                ],
+                employee: [
+                    { name: 'Members', icon: 'fa-users' },
+                    { name: 'Equipment', icon: 'fa-cogs' }
+                ],
+                admin: [
+                    { name: 'Members', icon: 'fa-users' },
+                    { name: 'Employees', icon: 'fa-user-tie' },
+                    { name: 'Equipment', icon: 'fa-cogs' }
+                ]
+            };
+
+            const navLinks = roles[userData.role] || [];
+            navLinksContainer.innerHTML = navLinks.map(link => `
+                <a href="#" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white transition" data-action="${link.name.toLowerCase().replace(' ', '-')}">
+                    <i class="fas ${link.icon} w-6"></i>
+                    <span class="mx-4">${link.name}</span>
+                </a>
+            `).join('');
+            
+            document.querySelectorAll('#nav-links a').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const action = e.currentTarget.dataset.action;
+                    if (action === 'members') loadMembersView();
+                    else if (action === 'employees') loadEmployeesView();
+                    else if (action === 'equipment') loadEquipmentView();
+                    else contentArea.innerHTML = `<div class="bg-gray-800 p-4 rounded-lg">Content for ${action.replace('-', ' ')} coming soon!</div>`;
+                });
+            });
+        }
+
+        // --- API Calls and Content Loading ---
+
+        async function fetchFromAPI(endpoint, method = 'GET', body = null) {
+            const token = localStorage.getItem('jwt_token');
+            const options = {
+                method: method,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            };
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+            if (response.status === 401) {
+                localStorage.removeItem('jwt_token');
+                window.location.href = 'index.html';
+            }
+            return response.json();
+        }
+
+        async function loadMembersView() {
+            try {
+                const members = await fetchFromAPI('/members/');
+                let content = `
+                    <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-2xl font-bold">Member Management</h2>
+                            <button onclick="showCreateModal('member')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition">+ Add New</button>
+                        </div>
+                        <table class="w-full text-left">
+                            <thead><tr class="border-b border-gray-700"><th class="p-2">ID</th><th class="p-2">Name</th><th class="p-2">Email</th><th class="p-2">Status</th></tr></thead>
+                            <tbody>`;
+                members.forEach(member => {
+                    content += `<tr class="border-b border-gray-700 hover:bg-gray-700"><td class="p-2">${member.member_id}</td><td class="p-2">${member.name}</td><td class="p-2">${member.email}</td><td class="p-2"><span class="px-2 py-1 text-xs rounded-full ${member.status === 'active' ? 'bg-green-500 text-green-900' : 'bg-red-500 text-red-900'}">${member.status}</span></td></tr>`;
+                });
+                content += `</tbody></table></div>`;
+                contentArea.innerHTML = content;
+            } catch (error) {
+                contentArea.innerHTML = `<div class="text-red-400">Failed to load members.</div>`;
+                console.error("Error loading members:", error);
+            }
+        }
+
+        async function loadEmployeesView() {
+            try {
+                const employees = await fetchFromAPI('/employees/');
+                let content = `
+                    <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+                         <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-2xl font-bold">Employee Management</h2>
+                            <button onclick="showCreateModal('employee')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition">+ Add New</button>
+                        </div>
+                        <table class="w-full text-left">
+                            <thead><tr class="border-b border-gray-700"><th class="p-2">ID</th><th class="p-2">Name</th><th class="p-2">Email</th><th class="p-2">Role</th></tr></thead>
+                            <tbody>`;
+                employees.forEach(employee => {
+                    content += `<tr class="border-b border-gray-700 hover:bg-gray-700"><td class="p-2">${employee.user_id}</td><td class="p-2">${employee.name}</td><td class="p-2">${employee.email}</td><td class="p-2">${employee.role}</td></tr>`;
+                });
+                content += `</tbody></table></div>`;
+                contentArea.innerHTML = content;
+            } catch (error) {
+                contentArea.innerHTML = `<div class="text-red-400">Failed to load employees.</div>`;
+                console.error("Error loading employees:", error);
+            }
+        }
+
+        async function loadEquipmentView() {
+            try {
+                const equipment = await fetchFromAPI('/equipment/');
+                let content = `
+                    <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-2xl font-bold">Equipment Management</h2>
+                            <button onclick="showCreateModal('equipment')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition">+ Add New</button>
+                        </div>
+                        <table class="w-full text-left">
+                            <thead><tr class="border-b border-gray-700"><th class="p-2">Code</th><th class="p-2">Name</th><th class="p-2">Quantity</th><th class="p-2">Price</th><th class="p-2">Category</th></tr></thead>
+                            <tbody>`;
+                equipment.forEach(item => {
+                    content += `<tr class="border-b border-gray-700 hover:bg-gray-700"><td class="p-2">${item.e_code}</td><td class="p-2">${item.e_name}</td><td class="p-2">${item.e_qty}</td><td class="p-2">$${item.e_unit_price}</td><td class="p-2">${item.e_category}</td></tr>`;
+                });
+                content += `</tbody></table></div>`;
+                contentArea.innerHTML = content;
+            } catch (error) {
+                contentArea.innerHTML = `<div class="text-red-400">Failed to load equipment.</div>`;
+                console.error("Error loading equipment:", error);
+            }
+        }
+
+        // --- Modal and Form Handling ---
+        
+        function showCreateModal(type) {
+            modalForm.reset();
+            modalForm.dataset.type = type;
+            let fieldsHtml = '';
+            
+            if (type === 'member') {
+                modalTitle.textContent = 'Add New Member';
+                fieldsHtml = `
+                    <input type="text" name="name" placeholder="Full Name" class="w-full p-2 mb-4 bg-gray-700 rounded" required>
+                    <input type="email" name="email" placeholder="Email Address" class="w-full p-2 mb-4 bg-gray-700 rounded" required>
+                    <input type="password" name="password" placeholder="Password" class="w-full p-2 mb-4 bg-gray-700 rounded" required>
+                    <input type="text" name="phone_number" placeholder="Phone Number" class="w-full p-2 mb-4 bg-gray-700 rounded">
+                    <input type="text" name="membership_plan" placeholder="Membership Plan" class="w-full p-2 bg-gray-700 rounded" required>
+                `;
+            } else if (type === 'employee') {
+                modalTitle.textContent = 'Add New Employee';
+                 fieldsHtml = `
+                    <input type="text" name="name" placeholder="Full Name" class="w-full p-2 mb-4 bg-gray-700 rounded" required>
+                    <input type="email" name="email" placeholder="Email Address" class="w-full p-2 mb-4 bg-gray-700 rounded" required>
+                    <input type="password" name="password" placeholder="Password" class="w-full p-2 mb-4 bg-gray-700 rounded" required>
+                    <select name="role" class="w-full p-2 mb-4 bg-gray-700 rounded" required><option value="Trainer">Trainer</option><option value="IT">IT</option></select>
+                    <input type="number" name="salary" placeholder="Salary" class="w-full p-2 bg-gray-700 rounded">
+                `;
+            } else if (type === 'equipment') {
+                modalTitle.textContent = 'Add New Equipment';
+                 fieldsHtml = `
+                    <input type="text" name="e_name" placeholder="Equipment Name" class="w-full p-2 mb-4 bg-gray-700 rounded" required>
+                    <input type="number" name="e_qty" placeholder="Quantity" class="w-full p-2 mb-4 bg-gray-700 rounded" required>
+                    <input type="number" name="e_unit_price" placeholder="Unit Price" class="w-full p-2 mb-4 bg-gray-700 rounded" required>
+                    <input type="text" name="e_category" placeholder="Category" class="w-full p-2 bg-gray-700 rounded" required>
+                `;
+            }
+
+            formFields.innerHTML = fieldsHtml;
+            formModal.classList.remove('hidden');
+            setTimeout(() => formModal.classList.remove('opacity-0'), 10);
+        }
+
+        function hideModal() {
+            formModal.classList.add('opacity-0');
+            setTimeout(() => formModal.classList.add('hidden'), 300);
+        }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const type = modalForm.dataset.type;
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            let endpoint = '';
+            if (type === 'member') endpoint = '/auth/register/member'; // Uses the public registration route
+            else if (type === 'employee') endpoint = '/employees/add';
+            else if (type === 'equipment') endpoint = '/equipment/add';
+
+            try {
+                const result = await fetchFromAPI(endpoint, 'POST', data);
+                if (result.message) {
+                    hideModal();
+                    // Refresh the corresponding view
+                    if (type === 'member') loadMembersView();
+                    else if (type === 'employee') loadEmployeesView();
+                    else if (type === 'equipment') loadEquipmentView();
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                console.error(`Failed to create ${type}:`, error);
+                alert(`An error occurred while creating the ${type}.`);
+            }
+        }
+
+        // --- Event Listeners ---
+        logoutButton.addEventListener('click', () => {
+            localStorage.removeItem('jwt_token');
+            window.location.href = 'index.html';
+        });
+        cancelButton.addEventListener('click', hideModal);
+        modalForm.addEventListener('submit', handleFormSubmit);
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', initializeDashboard);
+    </script>
+</body>
+</html>
