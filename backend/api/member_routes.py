@@ -1,192 +1,71 @@
-from .auth_routes import token_required
 from flask import Blueprint, request, jsonify
-from mysql.connector import Error
-from datetime import date
-
-# Go up one directory to import from database
-import sys
-sys.path.append('..')
-from database.connection import get_db_connection
+from .auth_routes import token_required
+from .user import Member
 
 member_bp = Blueprint('member_bp', __name__)
-
-# --- Helper Functions ---
-def fetch_all_members_from_db():
-    """Fetch all members from the database."""
-    conn = get_db_connection()
-    if not conn:
-        return None,"Database connection failed"
-    
-    cursor = conn.cursor(dictionary=True)
-    try:
-        cursor.execute("SELECT * FROM Members ORDER BY name ASC")
-        members = cursor.fetchall()
-        return members, None
-    except Error as e:
-        return None, f"Error fetching members: {e}"
-    finally:
-        cursor.close()
-        conn.close()
-
-# --- API ROUTES ---
 
 @member_bp.route('/', methods=['GET'])
 @token_required
 def get_all_members(current_user):
-    "API endpoint to get a list of all members."
-    members, error = fetch_all_members_from_db()
-    if error:
-        return jsonify({"error": error}), 500
-    return jsonify(members), 200
+    """
+    API endpoint to get a list of all members.
+    Accessible only by authenticated users.
+    """
+    # For extra security, you could check the role of the current_user
+    # if current_user['role'] not in ['admin', 'employee']:
+    #     return jsonify({"error": "Unauthorized access"}), 403
 
-@member_bp.route('/add', methods=['POST'])
-@token_required
-def add_member(current_user):
-    """API endpoint to add a new member."""
-    data = request.get_json()
-    if not data or not data.get('name') or not data.get('email') or not  data.get('membership_plan'):
-        return jsonify({"error": "Missing required fields"}), 400
-
-    name = data['name']
-    email = data['email']
-    membership_plan = data['membership_plan']
-    phone_number = data.get('phone_number')
-    gender = data.get('gender')
-    date_of_birth = data.get('date_of_birth')
-    join_date = date.today().strftime('%Y-%m-%d')
-
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({"error": "Database connection failed"}), 500
-
-    cursor = conn.cursor()
-    try:
-        # Check for duplicate email
-
-        cursor.execute("SELECT email FROM Members WHERE email = %s", (email,))
-        if cursor.fetchone():
-            return jsonify({"error": "A member with this email already exists"}), 409
-        sql = """INSERT INTO Members (name, email, phone_number, gender, date_of_birth, membership_plan, join_date)
-                 VALUES (%s, %s, %s, %s, %s, %s, %s)"""
-        cursor.execute(sql, (name, email, phone_number, gender, date_of_birth, membership_plan, join_date))
-        conn.commit()
-
-        #  Return the newly created member's data
-        member_id = cursor.lastrowid
-        return jsonify({
-            "message": "Member added successfully",
-            "member_id" : member_id,
-            }), 201
+    members = Member.get_all() # This method needs to be created in the Member class
     
-    except Error as e:
-        return jsonify({"error": f"An error occurred: {e}"}), 500
-    finally:
-        cursor.close()
-        conn.close()
+    # Convert the list of Member objects into a list of dictionaries
+    members_list = [
+        {"member_id": m.member_id, "name": m.name, "email": m.email, "status": m.status} 
+        for m in members
+    ]
+    
+    return jsonify(members_list), 200
 
-
-@member_bp.route('/update/<int:member_id>', methods=['PUT'])
+@member_bp.route('/<int:member_id>', methods=['GET'])
 @token_required
-def update_member(current_user,member_id):
-    """API endpoint to update an existing member."""
+def get_member_by_id(current_user, member_id):
+    """API endpoint to get a single member by their ID."""
+    member = Member.find_by_id(member_id) # This method needs to be created
+    if member:
+        return jsonify({
+            "member_id": member.member_id, 
+            "name": member.name, 
+            "email": member.email, 
+            "status": member.status
+        }), 200
+    else:
+        return jsonify({"error": "Member not found"}), 404
+
+@member_bp.route('/<int:member_id>', methods=['PUT'])
+@token_required
+def update_member(current_user, member_id):
+    """API endpoint to update an existing member's details."""
     data = request.get_json()
     if not data:
-        return jsonify({"error": "No data provided for update"}), 400
+        return jsonify({"error": "No update data provided"}), 400
 
-    # Building the query dynamically based on provided fields
-    fields_to_update = []
-    values = []
-    valid_fields = ['name', 'email', 'phone_number', 'membership_plan', 'status', 'gender', 'date_of_birth']
-    for key, value in data.items():
-        # Ensure only valid columns are updated
-        if key in valid_fields:
-            fields_to_update.append(f"{key} = %s")
-            values.append(value)
-
-    if not fields_to_update:
-        return jsonify({"error": "No valid fields to update"}), 400
-
-    values.append(member_id) # For the WHERE clause
-    query = f"UPDATE Members SET {', '.join(fields_to_update)} WHERE member_id = %s"
-
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({"error": "Database connection failed"}), 500
+    updated_member = Member.update(member_id, data) # This method needs to be created
     
-    cursor = conn.cursor()
-    try:
-        cursor.execute(query, tuple(values))
-        conn.commit()
-        
-        if cursor.rowcount == 0:
-            return jsonify({"error": "Member not found or no new data to update"}), 404
+    if updated_member:
+        return jsonify({"message": "Member updated successfully"}), 200
+    else:
+        return jsonify({"error": "Member not found or update failed"}), 404
 
-        return jsonify({"message": f"Member with ID {member_id} updated successfully."}), 200
-
-    except Error as e:
-        conn.rollback()
-        return jsonify({"error": f"An error occurred: {e}"}), 500
-    finally:
-        cursor.close()
-        conn.close()
-
-
-@member_bp.route('/delete/<int:member_id>', methods=['DELETE'])
+@member_bp.route('/<int:member_id>', methods=['DELETE'])
 @token_required
-def delete_member(current_user,member_id):
+def delete_member(current_user, member_id):
     """API endpoint to delete a member."""
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({"error": "Database connection failed"}), 500
+    # Add role check for extra security
+    if current_user['role'] != 'admin':
+        return jsonify({"error": "Unauthorized: Only admins can delete members"}), 403
+
+    success = Member.delete(member_id) # This method needs to be created
     
-    cursor = conn.cursor()
-    try:
-        cursor.execute("DELETE FROM Members WHERE member_id = %s", (member_id,))
-        conn.commit()
-
-        if cursor.rowcount == 0:
-            return jsonify({"error": "Member not found"}), 404
-
+    if success:
         return jsonify({"message": f"Member with ID {member_id} deleted successfully."}), 200
-
-    except Error as e:
-        conn.rollback()
-        return jsonify({"error": f"An error occurred: {e}"}), 500
-    finally:
-        cursor.close()
-        conn.close()
-
-@member_bp.route('/stats',methods=['GET'])
-@token_required
-def get_member_stats(current_user):
-    """API endpoint to get member statistics."""
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({"error": "Database connection failed"}), 500
-
-    cursor = conn.cursor(dictionary=True)
-    stats={}
-
-    try:
-        # 1. Get total member count
-        cursor.execute("SELECT COUNT(member_id) AS total_members FROM Members")
-        total_results = cursor.fetchone()
-        stats['total_members'] = total_results['total_members'] if total_results else 0
-
-        # 2. Get count of active members
-        cursor.execute("SELECT COUNT(member_id) AS active_members FROM Members WHERE status = 'active'")
-        active_results = cursor.fetchone()
-        stats['active_members'] = active_results['active_members'] if active_results else 0
-
-        # 3. Get member count by plan
-        cursor.execute("SELECT membership_plan,COUNT(member_id) AS count FROM Members Group by membership_plan")
-        plan_counts = cursor.fetchall()
-        stats['plan_distribution'] = {item['membership_plan']: item['count'] for item in plan_counts} # type: ignore
-
-        return jsonify(stats), 200
-
-    except Error as e:
-        return jsonify({"error": f"An error occurred: {e}"}), 500
-    finally:
-        cursor.close()
-        conn.close()
+    else:
+        return jsonify({"error": "Member not found or deletion failed"}), 404

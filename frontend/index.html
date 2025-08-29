@@ -3,530 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gym Management System</title>
+    <title>GymMonk - Login</title>
+    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for a modern look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Simple CSS to show/hide the modal */
-        .modal { display: none; }
-        .modal.active { display: flex; }
+        /* Use the Inter font family */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom styles for the background */
+        .bg-pattern {
+            background-color: #1a202c;
+            background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.1) 1px, transparent 0);
+            background-size: 20px 20px;
+        }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-pattern text-gray-200 flex items-center justify-center min-h-screen">
 
-    <div id="auth-view" class="flex items-center justify-center min-h-screen">
-        <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-            <h2 id="auth-title" class="text-2xl font-bold text-center text-gray-900">Sign in to your account</h2>
-            <p id="auth-subtitle" class="text-sm text-center">
-                Or <a href="#" id="toggle-auth-mode" class="font-medium text-indigo-600 hover:text-indigo-500">create a new account</a>
-            </p>
-            
-            <form id="auth-form" class="space-y-6">
-                <div id="name-field" class="hidden">
-                    <label for="name" class="text-sm font-medium text-gray-700">Full Name</label>
-                    <input id="name" name="name" type="text" class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                </div>
-                <div>
-                    <label for="email" class="text-sm font-medium text-gray-700">Email</label>
-                    <input id="email" name="email" type="email" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="you@example.com">
-                </div>
-                <div>
-                    <label for="password" class="text-sm font-medium text-gray-700">Password</label>
-                    <input id="password" name="password" type="password" required class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="••••••••">
-                </div>
-                <div>
-                    <button type="submit" id="auth-button" class="w-full px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Sign in
-                    </button>
-                </div>
-            </form>
-            <p id="auth-error" class="text-sm text-center text-red-600"></p>
+    <div class="w-full max-w-md mx-auto p-8 rounded-2xl bg-gray-800 bg-opacity-80 backdrop-blur-sm border border-gray-700 shadow-2xl">
+        
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white tracking-tight">GymMonk</h1>
+            <p class="text-gray-400 mt-2">Welcome back! Please login to your account.</p>
         </div>
-    </div>
 
-    <div id="dashboard-view" class="hidden">
-        <nav class="bg-white shadow">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-16">
-                    <div class="flex items-center">
-                        <span class="text-xl font-bold">GymMonk Dashboard</span>
+        <!-- Login Form -->
+        <form id="loginForm">
+            <!-- User Type Selection -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-400 mb-2">Login as:</label>
+                <div class="grid grid-cols-3 gap-2 rounded-lg p-1 bg-gray-700">
+                    <div>
+                        <input type="radio" name="userType" id="member" value="member" class="sr-only peer" checked>
+                        <label for="member" class="block w-full text-center text-sm font-medium py-2 px-4 rounded-md cursor-pointer peer-checked:bg-indigo-600 peer-checked:text-white transition-all duration-200">Member</label>
                     </div>
-                    <div class="flex items-center">
-                        <span id="user-info" class="mr-4 text-sm text-gray-600"></span>
-                        <button id="logout-button" class="px-3 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700">Logout</button>
+                    <div>
+                        <input type="radio" name="userType" id="employee" value="employee" class="sr-only peer">
+                        <label for="employee" class="block w-full text-center text-sm font-medium py-2 px-4 rounded-md cursor-pointer peer-checked:bg-indigo-600 peer-checked:text-white transition-all duration-200">Employee</label>
+                    </div>
+                    <div>
+                        <input type="radio" name="userType" id="admin" value="admin" class="sr-only peer">
+                        <label for="admin" class="block w-full text-center text-sm font-medium py-2 px-4 rounded-md cursor-pointer peer-checked:bg-indigo-600 peer-checked:text-white transition-all duration-200">Admin</label>
                     </div>
                 </div>
             </div>
-        </nav>
-        <main class="py-10">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white p-6 rounded-xl shadow-lg">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-semibold">Member Management</h2>
-                        <button id="add-member-btn" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700">Add Member</button>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Plan</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Join Date</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="member-list" class="bg-white divide-y divide-gray-200">
-                                </tbody>
-                        </table>
-                    </div>
-                </div>
+            
+            <!-- Email / Username Input -->
+            <div class="mb-4">
+                <label for="identifier" id="identifierLabel" class="block text-sm font-medium text-gray-400 mb-2">Email</label>
+                <input type="text" id="identifier" name="identifier" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" placeholder="you@example.com" required>
             </div>
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mb-8">
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6">
-                    <div class="bg-white p-6 rounded-xl shadow-lg flex items-center">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Active Members</p>
-                            <p id="stats-active-members" class="text-3xl font-bold text-green-500">0</p>
-                        </div>
-                    </div>
 
-                    <div class="bg-white p-6 rounded-xl shadow-lg flex items-center">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Total Members</p>
-                            <p id="stats-total-members" class="text-3xl font-bold">0</p>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-white p-6 rounded-xl shadow-lg flex items-center">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Monthly Plan</p>
-                            <p id="stats-plan-monthly" class="text-3xl font-bold">0</p>
-                        </div>
-                    </div>
-
-                    <div class="bg-white p-6 rounded-xl shadow-lg flex items-center">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Quarterly Plan</p>
-                            <p id="stats-plan-quarterly" class="text-3xl font-bold">0</p>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-white p-6 rounded-xl shadow-lg flex items-center">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Yearly Plan</p>
-                            <p id="stats-plan-yearly" class="text-3xl font-bold">0</p>
-                        </div>
-                    </div>
-                </div>
+            <!-- Password Input -->
+            <div class="mb-6">
+                <label for="password" class="block text-sm font-medium text-gray-400 mb-2">Password</label>
+                <input type="password" id="password" name="password" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" placeholder="••••••••" required>
             </div>
-        </main>
-    </div>
 
-    <div id="member-modal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full items-center justify-center">
-        <div class="relative mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
-            <h3 id="modal-title" class="text-lg font-medium leading-6 text-gray-900 mb-4">Add New Member</h3>
-            <form id="member-form">
-                <div class="space-y-4">
-                    <div>
-                        <label for="member-name" class="block text-sm font-medium text-gray-700">Full Name</label>
-                        <input type="text" id="member-name" required class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md">
-                    </div>
-                    <div>
-                        <label for="member-email" class="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" id="member-email" required class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md">
-                    </div>
-                    <div>
-                        <label for="member-phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
-                        <input type="tel" id="member-phone" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md">
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label for="member-gender" class="block text-sm font-medium text-gray-700">Gender</label>
-                            <select id="member-gender" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md">
-                                <option>Male</option>
-                                <option>Female</option>
-                                <option>Other</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label for="member-dob" class="block text-sm font-medium text-gray-700">Date of Birth</label>
-                            <input type="date" id="member-dob" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md">
-                        </div>
-                    </div>
-                    <div>
-                        <label for="member-plan" class="block text-sm font-medium text-gray-700">Membership Plan</label>
-                        <select id="member-plan" required class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md">
-                            <option>Monthly</option>
-                            <option>Quarterly</option>
-                            <option>Yearly</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="flex justify-end mt-6 space-x-3">
-                    <button type="button" id="cancel-modal-btn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 focus:outline-none">Cancel</button>
-                    <button type="submit" id="save-member-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none">Save</button>
-                </div>
-            </form>
+            <!-- Error Message Display -->
+            <div id="errorMessage" class="hidden text-center text-red-400 bg-red-900 bg-opacity-50 p-3 rounded-lg mb-4 text-sm"></div>
+
+            <!-- Submit Button -->
+            <div>
+                <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500 transition-all duration-300">
+                    Login
+                </button>
+            </div>
+        </form>
+
+        <!-- Sign Up Link -->
+        <div class="text-center mt-6">
+            <p class="text-sm text-gray-400">
+                Don't have an account? 
+                <a href="register.html" class="font-medium text-indigo-400 hover:text-indigo-300">Sign Up</a>
+            </p>
         </div>
     </div>
 
     <script>
-        // DOM Elements
-        const authView = document.getElementById('auth-view');
-        const dashboardView = document.getElementById('dashboard-view');
-        const authForm = document.getElementById('auth-form');
-        const authError = document.getElementById('auth-error');
-        const authTitle = document.getElementById('auth-title');
-        const authSubtitle = document.getElementById('auth-subtitle');
-        const authButton = document.getElementById('auth-button');
-        const nameField = document.getElementById('name-field');
-        const toggleAuthModeLink = document.getElementById('toggle-auth-mode');
-        const userInfo = document.getElementById('user-info');
-        const memberList = document.getElementById('member-list');
-        const logoutButton = document.getElementById('logout-button');
-        const addMemberBtn = document.getElementById('add-member-btn');
-        const memberModal = document.getElementById('member-modal');
-        const cancelModalBtn = document.getElementById('cancel-modal-btn');
-        const memberForm = document.getElementById('member-form');
-        
-        let isLoginMode = true;
-        let currentUserRole = null;
+        // --- Configuration ---
+        const API_BASE_URL = 'http://127.0.0.1:5000/api/auth'; // Base URL for your Flask backend
 
-        // --- Helper function to get the token ---
-        function getToken() {
-            return localStorage.getItem('jwt_token');
-        }
+        // --- DOM Elements ---
+        const form = document.getElementById('loginForm');
+        const userTypeRadios = document.querySelectorAll('input[name="userType"]');
+        const identifierInput = document.getElementById('identifier');
+        const identifierLabel = document.getElementById('identifierLabel');
+        const passwordInput = document.getElementById('password');
+        const errorMessageDiv = document.getElementById('errorMessage');
 
-        // --- Helper function to parse JWT ---
-        function parseJwt(token) {
-            try {
-                const base64Url = token.split('.')[1];
-                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                }).join(''));
+        // --- Event Listeners ---
 
-                return JSON.parse(jsonPayload);
-            } catch (e) {
-                return null;
-            }
-        }
-
-        // --- API Functions ---
-        async function loginUser(email, password) {
-            const response = await fetch('http://127.0.0.1:5000/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
+        // Update identifier label and placeholder based on user type
+        userTypeRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const userType = e.target.value;
+                if (userType === 'admin') {
+                    identifierLabel.textContent = 'Username';
+                    identifierInput.placeholder = 'admin_username';
+                    identifierInput.type = 'text';
+                } else {
+                    identifierLabel.textContent = 'Email';
+                    identifierInput.placeholder = 'you@example.com';
+                    identifierInput.type = 'email';
+                }
             });
-            const data = await response.json();
-            if (!response.ok) { throw new Error(data.error || 'Login failed.'); }
+        });
 
-             // ** NEW: Save the token on successful login **
-            localStorage.setItem('jwt_token', data.token);
-            const payload = parseJwt(data.token);
-            currentUserRole = payload.role; // <-- ADD THIS LINE
+        // Handle form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault(); // Prevent the default browser refresh
+            hideError();
 
-            return data;
-        }
+            const userType = document.querySelector('input[name="userType"]:checked').value;
+            const identifier = identifierInput.value;
+            const password = passwordInput.value;
 
-        async function registerUser(name, email, password) {
-            const response = await fetch('http://127.0.0.1:5000/api/auth/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, email, password })
-            });
-            const data = await response.json();
-            if (!response.ok) { throw new Error(data.error || 'Registration failed.'); }
-            alert('Registration successful! Please log in.');
-            toggleMode(true);
-        }
+            // Determine the correct API endpoint and payload structure
+            const endpoint = `${API_BASE_URL}/login/${userType}`;
+            const isEmailLogin = userType !== 'admin';
+            const payload = {
+                [isEmailLogin ? 'email' : 'username']: identifier,
+                password: password
+            };
 
-        async function fetchMembers() {
             try {
-                const response = await fetch('http://127.0.0.1:5000/api/members/', {// Added trailing slash for consistency
-                    headers: {
-                        'Authorization': `Bearer ${getToken()}`
-                    }
-                });
-                if (!response.ok) { throw new Error('Could not fetch members.'); }
-                const members = await response.json();
-                renderMembers(members);
-            } catch (error) {
-                console.error('Fetch Members Error:', error);
-                memberList.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-500">${error.message}</td></tr>`;
-            }
-        }
-
-        async function addMember(memberData) {
-            try {
-                // ** NEW: Add Authorization header with the token **
-                const response = await fetch('http://127.0.0.1:5000/api/members/add', {
+                const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${getToken()}`
                     },
-                    body: JSON.stringify(memberData),
+                    body: JSON.stringify(payload),
                 });
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Failed to add member.');
-                }
-                fetchMembers(); // Re-fetch the list to show the new member
-                memberModal.classList.remove('active'); // Hide the modal
-            } catch (error) {
-                console.error('Add Member Error:', error);
-                alert(error.message);
-            }
-        }
-        async function updateMember(memberId, memberData) {
-            try {
-                // ** NEW: Add Authorization header with the token **
-                const response = await fetch(`http://127.0.0.1:5000/api/members/update/${memberId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${getToken()}`
-                    },
-                    body: JSON.stringify(memberData),
-                });
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Failed to update member.');
-                }
-                fetchMembers(); // Refresh the list
-                memberModal.classList.remove('active'); // Close modal on success
-            } catch (error) {
-                console.error('Update Member Error:', error);
-                alert(error.message);
-            }
-        }
 
-        async function deleteMember(memberId) {
-            if (!confirm('Are you sure you want to delete this member?')) {
-                return;
-            }
-            try {
-                // ** NEW: Add Authorization header with the token **
-                const response = await fetch(`http://127.0.0.1:5000/api/members/delete/${memberId}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${getToken()}`
-                    }
-                });
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Failed to delete member.');
-                }
-                fetchMembers(); // Refresh the list to show the member has been removed
-            } catch (error) {
-                console.error('Delete Member Error:', error);
-                alert(error.message);
-            }
-        }
+                const data = await response.json();
 
-        async function fetchDashboardStats() {
-            try {
-                const response = await fetch('http://127.0.0.1:5000/api/members/stats',{
-                    headers: {
-                        'Authorization': `Bearer ${getToken()}`
-                    }
-                });
-                if (!response.ok) { throw new Error('Could not fetch stats.'); }
-                const stats = await response.json();
-                renderDashboardStats(stats);
-            } catch (error) {
-                console.error('Fetch Stats Error:', error);
-            }
-        }
-
-        // --- UI Functions ---
-        function renderMembers(members) {
-            if (!members || members.length === 0) {
-                // Note: Colspan is 5 to account for the Actions column
-                memberList.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500">No members found.</td></tr>`;
-                return;
-            }
-            let html = '';
-            members.forEach(member => {
-                const joinDate = new Date(member.join_date).toLocaleDateString('en-GB');
-                
-                // THE SECURITY CHECK: Conditionally add action buttons only for admins
-                let actionButtons = '';
-                if (currentUserRole === 'admin') {
-                    actionButtons = `
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button onclick='openEditModal(${JSON.stringify(member)})' class="text-indigo-600 hover:text-indigo-900 mr-4">Edit</button>
-                            <button onclick='deleteMember(${member.member_id})' class="text-red-600 hover:text-red-900">Delete</button>
-                        </td>
-                    `;
+                if (response.ok) {
+                    // Login successful
+                    console.log('Login successful:', data);
+                    // Store the token securely
+                    localStorage.setItem('jwt_token', data.token);
+                    // Redirect to a dashboard page (which we will create next)
+                    window.location.href = 'dashboard.html';
                 } else {
-                    actionButtons = `<td class="px-6 py-4"></td>`; // Render an empty cell for non-admins
+                    // Login failed, show error message
+                    showError(data.error || 'An unknown error occurred.');
                 }
-
-                html += `
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">${member.name}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">${member.email}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">${member.membership_plan}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">${joinDate}</td>
-                        ${actionButtons} 
-                    </tr>
-                `;
-            });
-            memberList.innerHTML = html;
-        }
-
-        function openEditModal(member) {
-            memberForm.dataset.editingId = member.member_id;
-            
-            // Pre-fill all fields, including the new ones
-            document.getElementById('modal-title').textContent = 'Edit Member';
-            document.getElementById('member-name').value = member.name || '';
-            document.getElementById('member-email').value = member.email || '';
-            document.getElementById('member-phone').value = member.phone_number || '';
-            document.getElementById('member-gender').value = member.gender || 'Male';
-            // Format date correctly for the input field
-            document.getElementById('member-dob').value = member.date_of_birth ? new Date(member.date_of_birth).toISOString().split('T')[0] : '';
-            document.getElementById('member-plan').value = member.membership_plan || 'Monthly';
-            
-            memberModal.classList.add('active');
-        }
-        
-        function showDashboard(userData) {
-            authView.classList.add('hidden');
-            dashboardView.classList.remove('hidden');
-            const token = getToken();
-            const payload = parseJwt(token);
-            userInfo.textContent = `Welcome, ${payload.name}!`;
-            fetchMembers();
-            fetchDashboardStats();
-        }
-
-        function showLoginView() {
-            // Clear the token from storage
-            localStorage.removeItem('jwt_token');
-            currentUserRole = null; // Reset the user role
-            
-            memberList.innerHTML = '';
-
-            authView.classList.remove('hidden');
-            dashboardView.classList.add('hidden');
-            authForm.reset();
-            authError.textContent = '';
-            // Reset to login mode view
-            if (!isLoginMode) {
-                toggleMode(true);
-            }
-        }
-
-        // ** NEW: Add a function to check login status on page load **
-        function checkLoginStatus() {
-            const token = getToken();
-            if (token) {
-                const payload = parseJwt(token);
-                if (payload) {
-                    currentUserRole = payload.role; // Set the global role
-                    showDashboard({ user: { name: payload.name } });
-                } else {
-                    // If token is invalid or expired
-                    showLoginView();
-                }
-            }
-        }
-
-        function toggleMode(forceLogin = null) {
-            isLoginMode = (forceLogin !== null) ? forceLogin : !isLoginMode;
-            authForm.reset();
-            authError.textContent = '';
-            const link = document.getElementById('toggle-auth-mode');
-            if (isLoginMode) {
-                authTitle.textContent = 'Sign in to your account';
-                link.innerHTML = 'create a new account';
-                authButton.textContent = 'Sign in';
-                nameField.classList.add('hidden');
-            } else {
-                authTitle.textContent = 'Create a new account';
-                link.innerHTML = 'sign in to your account';
-                authButton.textContent = 'Create Account';
-                nameField.classList.remove('hidden');
-            }
-        }
-
-        function renderDashboardStats(stats) {
-            document.getElementById('stats-active-members').textContent = stats.active_members || 0;
-            document.getElementById('stats-total-members').textContent = stats.total_members || 0;
-            
-            // Use the ?. optional chaining operator to safely get counts.
-            // If a plan doesn't exist in the data, it will show 0 instead of causing an error.
-            document.getElementById('stats-plan-monthly').textContent = stats.plan_distribution?.Monthly || 0;
-            document.getElementById('stats-plan-quarterly').textContent = stats.plan_distribution?.Quarterly || 0;
-            document.getElementById('stats-plan-yearly').textContent = stats.plan_distribution?.Yearly || 0;
-        }
-        
-        // --- Event Listeners ---
-        authForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = authForm.email.value;
-            const password = authForm.password.value;
-            authError.textContent = '';
-            if (isLoginMode) {
-                try {
-                    const userData = await loginUser(email, password);
-                    showDashboard(userData);
-                } catch (error) {
-                    authError.textContent = error.message;
-                }
-            } else {
-                const name = authForm.name.value;
-                await registerUser(name, email, password);
+            } catch (error) {
+                console.error('Network or server error:', error);
+                showError('Could not connect to the server. Please make sure it is running.');
             }
         });
 
-        toggleAuthModeLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            toggleMode();
-        });
-
-        logoutButton.addEventListener('click', () => {
-            showLoginView();
-        });
-
-        addMemberBtn.addEventListener('click', () => {
-            memberForm.reset();
-            memberModal.classList.add('active');
-        });
-
-        cancelModalBtn.addEventListener('click', () => {
-            memberModal.classList.remove('active');
-        });
-
-        memberForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        
-        // Collect data from all form fields
-        const memberData = {
-            name: document.getElementById('member-name').value,
-            email: document.getElementById('member-email').value,
-            phone_number: document.getElementById('member-phone').value,
-            gender: document.getElementById('member-gender').value,
-            date_of_birth: document.getElementById('member-dob').value,
-            membership_plan: document.getElementById('member-plan').value,
-        };
-
-        // Check if we are editing or adding
-        const editingId = e.target.dataset.editingId;
-        if (editingId) {
-            updateMember(editingId, memberData);
-        } else {
-            addMember(memberData);
+        // --- Helper Functions ---
+        function showError(message) {
+            errorMessageDiv.textContent = message;
+            errorMessageDiv.classList.remove('hidden');
         }
-    });
 
-        // ** NEW: Call the checkLoginStatus function when the page loads **
-        document.addEventListener('DOMContentLoaded', checkLoginStatus);
-
+        function hideError() {
+            errorMessageDiv.classList.add('hidden');
+        }
     </script>
 </body>
 </html>

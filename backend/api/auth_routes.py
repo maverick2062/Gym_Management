@@ -1,152 +1,149 @@
-from flask import Blueprint, request, jsonify
-from mysql.connector import Error
-import re # For email validation
-import jwt
-import os
-from datetime import datetime, timedelta
+from flask import Blueprint, request, jsonify, current_app
 from functools import wraps
+import jwt
+from datetime import datetime, timedelta
 
-# Go up one directory to import from database and core
-import sys
-sys.path.append('..')
+# Import the data model classes from your other api files
+from .user import Member
+from .admin import Admin
+from .employee import Employee
 
-from database.connection import get_db_connection
-from core.security import hash_password, verify_password
+# A Blueprint organizes a group of related routes.
+auth_bp = Blueprint('auth_bp', __name__)
 
 def token_required(f):
-    """Decorator to protect routes with JWT authentication."""
+    """
+    Decorator to protect routes with JWT (JSON Web Token) authentication.
+    It checks for a valid token in the 'Authorization' header.
+    """
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
         if 'Authorization' in request.headers:
-            # Expected format: "Bearer <token>"
-            token = request.headers['Authorization'].split(" ")[1]
+            try:
+                # Expects "Bearer <token>"
+                token = request.headers['Authorization'].split(" ")[1]
+            except IndexError:
+                return jsonify({'message': 'Malformed token header!'}), 401
 
         if not token:
             return jsonify({'message': 'Authentication token is missing!'}), 401
 
-        secret_key = os.getenv('SECRET_KEY')
         try:
-            # Decode the token and get the user payload
-            data = jwt.decode(token, secret_key, algorithms=['HS256'])
+            # Decode the token using the secret key from the app config
+            data = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+            # The decoded data (user info) is passed to the route
             current_user = data
         except jwt.ExpiredSignatureError:
             return jsonify({'message': 'Token has expired!'}), 401
         except jwt.InvalidTokenError:
             return jsonify({'message': 'Token is invalid!'}), 401
 
-        # Pass the user data to the route
         return f(current_user, *args, **kwargs)
 
     return decorated
 
-# A Blueprint is a way to organize a group of related views and other code.
-# Rather than registering views and other code directly with an application,
-# they are registered with a blueprint. Then the blueprint is registered
-# with the application when it is available in a factory function.
-auth_bp = Blueprint('auth_bp', __name__)
 
-def is_valid_email(email):
-    """Simple regex for email validation."""
-    regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    return re.match(regex, email)
-
-@auth_bp.route('/register', methods=['POST'])
-def register_user():
-    """API endpoint for user registration."""
+@auth_bp.route('/register/member', methods=['POST'])
+def register_member():
+    """API endpoint for new gym member registration."""
     data = request.get_json()
-    if not data or not data.get('name') or not data.get('email') or not data.get('password'):
+    required_fields = ['name', 'email', 'password', 'phone_number', 'membership_plan']
+    if not all(field in data for field in required_fields):
         return jsonify({"error": "Missing required fields"}), 400
 
-    name = data['name']
-    email = data['email']
-    password = data['password']
-    # Default role is 'employee', can be changed to 'admin' manually in DB if needed
-    role = data.get('role', 'employee') 
+    # Set a default join_date if not provided
+    data['join_date'] = data.get('join_date', datetime.today().strftime('%Y-%m-%d'))
 
-    if not is_valid_email(email):
-        return jsonify({"error": "Invalid email format"}), 400
+    # Use the Member.create method which handles all database logic
+    new_member = Member.create(
+        name=data['name'],
+        email=data['email'],
+        password=data['password'],
+        phone_number=data['phone_number'],
+        membership_plan=data['membership_plan'],
+        join_date=data['join_date']
+    )
     
-    if len(password) < 8:
-        return jsonify({"error": "Password must be at least 8 characters long"}), 400
-
-    hashed_pass = hash_password(password)
-
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({"error": "Database connection failed"}), 500
-    
-    cursor = conn.cursor()
-
-    try:
-        # Check if email already exists
-        cursor.execute("SELECT email FROM Users WHERE email = %s", (email,))
-        if cursor.fetchone():
-            return jsonify({"error": "An account with this email already exists"}), 409 # 409 Conflict
-
-        # Insert new user
-        query = "INSERT INTO Users (name, email, password, role) VALUES (%s, %s, %s, %s)"
-        cursor.execute(query, (name, email, hashed_pass, role))
-        conn.commit()
-        
-        return jsonify({"message": "User registered successfully!"}), 201
-
-    except Error as e:
-        return jsonify({"error": f"An error occurred: {e}"}), 500
-    finally:
-        cursor.close()
-        conn.close()
+    if new_member:
+        return jsonify({
+            "message": "Member registered successfully",
+            "member": {"id": new_member.member_id, "name": new_member.name, "email": new_member.email}
+        }), 201  # 201 Created
+    else:
+        # The create method returns None if the email already exists
+        return jsonify({"error": "Registration failed. Email may already be in use."}), 409  # 409 Conflict
 
 
-@auth_bp.route('/login', methods=['POST'])
-def login_user():
-    """API endpoint for user login."""
+@auth_bp.route('/login/member', methods=['POST'])
+def login_member():
+    """API endpoint for member login."""
     data = request.get_json()
     if not data or not data.get('email') or not data.get('password'):
         return jsonify({"error": "Missing email or password"}), 400
 
-    email = data['email']
-    password = data['password']
-
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({"error": "Database connection failed"}), 500
+    # Use the Member.authenticate method
+    member = Member.authenticate(email=data['email'], password=data['password'])
     
-    # Use a dictionary cursor to get column names
-    cursor = conn.cursor(dictionary=True) 
+    if not member:
+        return jsonify({"error": "Invalid credentials"}), 401
 
-    try:
-        cursor.execute("SELECT * FROM Users WHERE email = %s", (email,))
-        user = cursor.fetchone()
-        
-        if not user:
-            return jsonify({"error": "Invalid credentials"}), 401 # 401 Unauthorized
+    # Create the JWT token payload
+    token_payload = {
+        'user_id': member.member_id,
+        'email': member.email,
+        'role': 'member',
+        'exp': datetime.utcnow() + timedelta(hours=24)  # Token expires in 24 hours
+    }
+    
+    token = jwt.encode(token_payload, current_app.config['SECRET_KEY'], algorithm='HS256')
+    
+    return jsonify({'message': 'Login successful', 'token': token})
 
-        if not verify_password(password, user['password']):
-            cursor.close()
-            conn.close()
-            return jsonify({"error": "Invalid credentials"}), 401
-        
-        cursor.close()
-        conn.close()
 
-        # In a real app, you would return a JWT (JSON Web Token) here for session management
-        # For now, we'll return a simple success message and user info
-        user_info = {
-            "user_id": user['user_id'],
-            "name": user['name'],
-            "role": user['role'],
-            'exp': datetime.utcnow() + timedelta(hours=24) 
-        }
+@auth_bp.route('/login/admin', methods=['POST'])
+def login_admin():
+    """API endpoint for admin login."""
+    data = request.get_json()
+    if not data or not data.get('username') or not data.get('password'):
+        return jsonify({"error": "Missing username or password"}), 400
 
-         # Generate the token
-        secret_key = os.getenv('SECRET_KEY')
-        token = jwt.encode(user_info, secret_key, algorithm='HS256')
+    admin = Admin.authenticate(username=data['username'], password=data['password'])
+    
+    if not admin:
+        return jsonify({"error": "Invalid credentials"}), 401
 
-        return jsonify({'message': 'Login successful', 'token': token})
+    token_payload = {
+        'user_id': admin.admin_id,
+        'username': admin.username,
+        'role': 'admin',
+        'exp': datetime.utcnow() + timedelta(hours=24)
+    }
+    
+    token = jwt.encode(token_payload, current_app.config['SECRET_KEY'], algorithm='HS256')
+    
+    return jsonify({'message': 'Login successful', 'token': token})
 
-    except Error as e:
-        return jsonify({"error": f"An error occurred: {e}"}), 500
-    finally:
-        cursor.close()
-        conn.close()
+
+@auth_bp.route('/login/employee', methods=['POST'])
+def login_employee():
+    """API endpoint for employee login."""
+    data = request.get_json()
+    if not data or not data.get('email') or not data.get('password'):
+        return jsonify({"error": "Missing email or password"}), 400
+
+    employee = Employee.authenticate(email=data['email'], password=data['password'])
+    
+    if not employee:
+        return jsonify({"error": "Invalid credentials"}), 401
+
+    token_payload = {
+        'user_id': employee.user_id,
+        'email': employee.email,
+        'role': employee.role, # Role can be 'IT' or 'Trainer'
+        'exp': datetime.utcnow() + timedelta(hours=24)
+    }
+    
+    token = jwt.encode(token_payload, current_app.config['SECRET_KEY'], algorithm='HS256')
+    
+    return jsonify({'message': 'Login successful', 'token': token})
