@@ -15,11 +15,12 @@ class Member:
     such as registration, authentication, and data management (CRUD).
     """
 
-    def __init__(self, member_id, name, email, status, phone_number=None, membership_plan=None, join_date=None):
+    def __init__(self, member_id, name, email, password, status, phone_number=None, membership_plan=None, join_date=None):
         """Initializes a Member object with data for an existing member."""
         self.member_id = member_id
         self.name = name
         self.email = email
+        self.password = password
         self.status = status
         self.phone_number = phone_number
         self.membership_plan = membership_plan
@@ -67,7 +68,7 @@ class Member:
                 conn.commit()
                 member_id = cursor.lastrowid
                 logging.info(f"Successfully registered new member: {name} ({email}) with ID: {member_id}")
-                return cls(member_id=member_id, name=name, email=email, status='active')
+                return cls(member_id=member_id, name=name, email=email, password=hashed_pw, status='active')
         except Error as e:
             logging.error(f"Failed to register member {name}: {e}")
             return None
@@ -93,7 +94,7 @@ class Member:
                 if verify_password(password, result['password']):
                     logging.info(f"Login successful for member: {result['name']} ({email})")
                     cls._log_activity(result['member_ID'], "Login Successful")
-                    return cls(member_id=result['member_ID'], name=result['name'], email=result['email'], status=result['status'])
+                    return cls(member_id=result['member_ID'], name=result['name'], email=result['email'], password=result['password'], status=result['status'])
                 else:
                     logging.warning(f"Login failed: Invalid password for {email}")
                     cls._log_activity(result['member_ID'], "Invalid Password")

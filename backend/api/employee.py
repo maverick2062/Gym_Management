@@ -28,10 +28,13 @@ class Employee:
         """Checks if an employee with the given email already exists."""
         query = "SELECT email FROM Employee WHERE email = %s"
         try:
-            with get_db_connection() as conn:
-                with conn.cursor() as cursor:
-                    cursor.execute(query, (email,))
-                    return cursor.fetchone() is not None
+            conn = get_db_connection()
+            if conn is None:
+                logging.error("Failed to establish database connection.")
+                return False
+            with conn.cursor() as cursor:
+                cursor.execute(query, (email,))
+                return cursor.fetchone() is not None
         except Error as e:
             logging.error(f"Database error while checking if employee email exists: {e}")
             return True

@@ -19,7 +19,7 @@ def get_all_members(current_user):
     
     # Convert the list of Member objects into a list of dictionaries
     members_list = [
-        {"member_id": m.member_id, "name": m.name, "email": m.email, "status": m.status} 
+        {"member_id": m.member_id, "name": m.name, "email": m.email, "password": m.password, "status": m.status} 
         for m in members
     ]
     
@@ -34,7 +34,8 @@ def get_member_by_id(current_user, member_id):
         return jsonify({
             "member_id": member.member_id, 
             "name": member.name, 
-            "email": member.email, 
+            "email": member.email,
+            "password": member.password,
             "status": member.status
         }), 200
     else:
