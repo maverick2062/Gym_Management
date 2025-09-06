@@ -68,7 +68,7 @@ def register_member():
     if new_member:
         return jsonify({
             "message": "Member registered successfully",
-            "member": {"id": new_member.member_id, "name": new_member.name, "email": new_member.email}
+            "member": {"id": new_member.member_ID, "name": new_member.name, "email": new_member.email}
         }), 201  # 201 Created
     else:
         # The create method returns None if the email already exists
@@ -90,7 +90,7 @@ def login_member():
 
     # Create the JWT token payload
     token_payload = {
-        'user_id': member.member_id,
+        'user_id': member.member_ID,
         'email': member.email,
         'role': 'member',
         'exp': datetime.utcnow() + timedelta(hours=24)  # Token expires in 24 hours
@@ -114,7 +114,7 @@ def login_admin():
         return jsonify({"error": "Invalid credentials"}), 401
 
     token_payload = {
-        'user_id': admin.admin_id,
+        'user_id': admin.admin_ID,
         'username': admin.username,
         'role': 'admin',
         'exp': datetime.utcnow() + timedelta(hours=24)

@@ -15,9 +15,9 @@ class Admin:
     including registration, authentication, and logging activities.
     """
 
-    def __init__(self, admin_id, name, username):
+    def __init__(self, ad_ID, name, username):
         """Initializes an Admin object with data for an existing administrator."""
-        self.admin_id = admin_id
+        self.admin_ID = ad_ID
         self.name = name
         self.username = username
 
@@ -78,7 +78,7 @@ class Admin:
                 conn.commit()
                 admin_id = cursor.lastrowid
                 logging.info(f"Successfully registered new admin: {name} ({username}) with ID: {admin_id}")
-                return cls(admin_id=admin_id, name=name, username=username)
+                return cls(ad_ID=admin_id, name=name, username=username)
         except Error as e:
             logging.error(f"Failed to register admin {name}: {e}")
             return None
@@ -117,7 +117,7 @@ class Admin:
                     logging.info(f"Login successful for admin: {name} ({username})")
                     # Log the successful login attempt
                     cls._log_activity(admin_id, "Login Successful")
-                    return cls(admin_id=admin_id, name=name, username=db_username)
+                    return cls(ad_ID=admin_id, name=name, username=db_username)
                 else:
                     logging.warning(f"Admin login failed: Invalid password for {username}")
                     # Log the failed login attempt
