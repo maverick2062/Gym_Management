@@ -12,13 +12,9 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 class Member:
     """
     Represents a gym member and handles all related database operations
-<<<<<<< HEAD
-    such as registration, authentication, and data management (CRUD)."""
-=======
     such as registration, authentication, and data management (CRUD).
     """
 
->>>>>>> bde6e4e (Debugged the employee and user files as well. Fixed class attribute names to match database schema. Corrected table name in connection.py from Equipments to Equipment for grammatical accuracy.)
     def __init__(self, member_ID, name, email, password, status, phone_number=None, membership_plan=None, join_date=None, created_at=None, updated_at=None):
         """Initializes a Member object with data for an existing member."""
         self.member_ID = member_ID
@@ -74,12 +70,7 @@ class Member:
                 conn.commit()
                 member_ID = cursor.lastrowid
                 logging.info(f"Successfully registered new member: {name} ({email}) with ID: {member_ID}")
-<<<<<<< HEAD
-                return cls(member_ID=member_ID, name=name, email=email, password=hashed_pw, status='active')
-=======
-                # We can return a simplified object or fetch the full new object
-                return cls(member_ID=member_ID, name=name, email=email, password=hashed_pw, status='active', phone_number=phone_number, membership_plan=membership_plan, join_date=join_date)
->>>>>>> bde6e4e (Debugged the employee and user files as well. Fixed class attribute names to match database schema. Corrected table name in connection.py from Equipments to Equipment for grammatical accuracy.)
+                return cls.find_by_id(member_ID)
         except Error as e:
             logging.error(f"Failed to register member {name}: {e}")
             return None
@@ -105,11 +96,7 @@ class Member:
                 if verify_password(password, result['password']):
                     logging.info(f"Login successful for member: {result['name']} ({email})")
                     cls._log_activity(result['member_ID'], "Login Successful")
-<<<<<<< HEAD
-                    return cls(member_ID=result['member_ID'], name=result['name'], email=result['email'], password=result['password'], status=result['status'])
-=======
                     return cls(**result)
->>>>>>> bde6e4e (Debugged the employee and user files as well. Fixed class attribute names to match database schema. Corrected table name in connection.py from Equipments to Equipment for grammatical accuracy.)
                 else:
                     logging.warning(f"Login failed: Invalid password for {email}")
                     cls._log_activity(result['member_ID'], "Invalid Password")
@@ -118,7 +105,7 @@ class Member:
             logging.error(f"Database error during authentication for {email}: {e}")
             return None
 
-    # --- NEW CRUD Methods ---
+    # --- CRUD Methods ---
 
     @staticmethod
     def get_all() -> list['Member']:
@@ -138,8 +125,6 @@ class Member:
                         members_list.append(Member(**row))
         except Error as e:
             logging.error(f"Database error while fetching all members: {e}")
-            # Re-raise or handle appropriately
-            raise e
         return members_list
 
     @staticmethod
@@ -171,11 +156,7 @@ class Member:
             return None
 
         query = f"UPDATE Members SET {', '.join(set_clause_parts)} WHERE member_ID = %s"
-<<<<<<< HEAD
-        values = list(updates.values()) + [member_ID]
-=======
         values = [updates[key] for key in updates if key in valid_columns] + [member_ID]
->>>>>>> bde6e4e (Debugged the employee and user files as well. Fixed class attribute names to match database schema. Corrected table name in connection.py from Equipments to Equipment for grammatical accuracy.)
 
         try:
             conn = get_db_connection()
@@ -225,7 +206,3 @@ class Member:
         except Error as e:
             logging.error(f"Failed to log activity for member ID {member_ID}: {e}")
 
-<<<<<<< HEAD
-
-=======
->>>>>>> bde6e4e (Debugged the employee and user files as well. Fixed class attribute names to match database schema. Corrected table name in connection.py from Equipments to Equipment for grammatical accuracy.)

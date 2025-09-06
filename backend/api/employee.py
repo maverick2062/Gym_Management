@@ -14,15 +14,15 @@ class Employee:
     Represents a gym employee and handles all related database operations,
     including registration, authentication, and activity logging.
     """
+
     def __init__(self, user_id, name, email, password, role, salary=0, join_date=None):
         """Initializes an Employee object with data for an existing employee."""
         self.user_id = user_id
         self.name = name
         self.email = email
-        self.password = password  # Password is not stored in plain text
+        self.password = password
         self.role = role
         self.salary = salary
-        self.password = password # Storing the hash on the object
         self.join_date = join_date
 
     @staticmethod
@@ -56,12 +56,13 @@ class Employee:
             if conn is None:
                 logging.error("Failed to establish database connection.")
                 return None
-            with conn.cursor() as cursor:
+            with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(query, (name, email, hashed_pw, role, salary))
                 conn.commit()
                 user_id = cursor.lastrowid
                 logging.info(f"Successfully registered new employee: {name} ({email}) with ID: {user_id}")
-                return cls(user_id=user_id, name=name, email=email, password=hashed_pw, role=role, salary=salary)
+                # Fetch the newly created employee to return a full object
+                return cls.find_by_id(user_id)
         except Error as e:
             logging.error(f"Failed to register employee {name}: {e}")
             return None
@@ -69,7 +70,7 @@ class Employee:
     @classmethod
     def authenticate(cls, email: str, password: str) -> Optional['Employee']:
         """Authenticates an employee by verifying their email and password."""
-        query = "SELECT user_id, name, email, password, role, salary, join_date FROM Employee WHERE email = %s"
+        query = "SELECT * FROM Employee WHERE email = %s"
         try:
             conn = get_db_connection()
             if conn is None:         
@@ -100,12 +101,17 @@ class Employee:
     def get_all() -> list['Employee']:
         """Retrieves all employees from the database."""
         employees_list = []
-        query = "SELECT user_id, name, email, role, salary, join_date FROM Employee ORDER BY name ASC"
+        query = "SELECT * FROM Employee ORDER BY name ASC"
         try:
-            with get_db_connection() as conn:
-                with conn.cursor(dictionary=True) as cursor:
-                    cursor.execute(query)
-                    for row in cursor.fetchall():
+            conn = get_db_connection()
+            if conn is None:
+                logging.error("Failed to establish database connection.")
+                return []
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute(query)
+                res = cursor.fetchall()
+                if res:
+                    for row in res:
                         employees_list.append(Employee(**row))
         except Error as e:
             logging.error(f"Database error fetching all employees: {e}")
@@ -114,14 +120,17 @@ class Employee:
     @staticmethod
     def find_by_id(user_id: int) -> Optional['Employee']:
         """Finds a single employee by their user_id."""
-        query = "SELECT user_id, name, email, role, salary, join_date FROM Employee WHERE user_id = %s"
+        query = "SELECT * FROM Employee WHERE user_id = %s"
         try:
-            with get_db_connection() as conn:
-                with conn.cursor(dictionary=True) as cursor:
-                    cursor.execute(query, (user_id,))
-                    result = cursor.fetchone()
-                    if result:
-                        return Employee(**result)
+            conn = get_db_connection()
+            if conn is None:    
+                logging.error("Failed to establish database connection.")
+                return None
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute(query, (user_id,))
+                result = cursor.fetchone()
+                if result:
+                    return Employee(**result)
         except Error as e:
             logging.error(f"Database error finding employee by ID {user_id}: {e}")
         return None
@@ -146,15 +155,18 @@ class Employee:
         values.append(user_id)
 
         try:
-            with get_db_connection() as conn:
-                with conn.cursor() as cursor:
-                    cursor.execute(query, tuple(values))
-                    conn.commit()
-                    if cursor.rowcount > 0:
-                        return Employee.find_by_id(user_id)
-                    else:
-                        logging.warning(f"Update failed: No employee found with ID {user_id}")
-                        return None
+            conn = get_db_connection()
+            if conn is None:    
+                logging.error("Failed to establish database connection.")
+                return None
+            with conn.cursor() as cursor:
+                cursor.execute(query, tuple(values))
+                conn.commit()
+                if cursor.rowcount > 0:
+                    return Employee.find_by_id(user_id)
+                else:
+                    logging.warning(f"Update failed: No employee found with ID {user_id}")
+                    return None
         except Error as e:
             logging.error(f"Database error updating employee {user_id}: {e}")
         return None
@@ -164,11 +176,14 @@ class Employee:
         """Deletes an employee from the database."""
         query = "DELETE FROM Employee WHERE user_id = %s"
         try:
-            with get_db_connection() as conn:
-                with conn.cursor() as cursor:
-                    cursor.execute(query, (user_id,))
-                    conn.commit()
-                    return cursor.rowcount > 0
+            conn = get_db_connection()
+            if conn is None:    
+                logging.error("Failed to establish database connection.")
+                return False
+            with conn.cursor() as cursor:
+                cursor.execute(query, (user_id,))
+                conn.commit()
+                return cursor.rowcount > 0
         except Error as e:
             logging.error(f"Database error deleting employee {user_id}: {e}")
         return False
@@ -178,10 +193,13 @@ class Employee:
         """Private helper to log employee login attempts."""
         query = "INSERT INTO ELD (emp_id, login_status) VALUES (%s, %s)"
         try:
-            with get_db_connection() as conn:
-                with conn.cursor() as cursor:
-                    cursor.execute(query, (employee_id, status))
-                    conn.commit()
+            conn = get_db_connection()
+            if conn is None:    
+                logging.error("Failed to establish database connection.")
+                return None
+            with conn.cursor() as cursor:
+                cursor.execute(query, (employee_id, status))
+                conn.commit()
         except Error as e:
             logging.error(f"Failed to log activity for employee ID {employee_id}: {e}")
 
