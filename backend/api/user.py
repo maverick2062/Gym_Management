@@ -12,10 +12,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 class Member:
     """
     Represents a gym member and handles all related database operations
-    such as registration, authentication, and data management (CRUD).
-    """
-
-    def __init__(self, member_ID, name, email, password, status, phone_number=None, membership_plan=None, join_date=None):
+    such as registration, authentication, and data management (CRUD)."""
+    def __init__(self, member_ID, name, email, password, status, phone_number=None, membership_plan=None, join_date=None, created_at=None, updated_at=None):
         """Initializes a Member object with data for an existing member."""
         self.member_ID = member_ID
         self.name = name
@@ -25,6 +23,8 @@ class Member:
         self.phone_number = phone_number
         self.membership_plan = membership_plan
         self.join_date = join_date
+        self.created_at = created_at
+        self.updated_at = updated_at
 
     # --- Authentication and Creation Methods ---
 
@@ -206,3 +206,5 @@ class Member:
                 conn.commit()
         except Error as e:
             logging.error(f"Failed to log activity for member ID {member_ID}: {e}")
+
+

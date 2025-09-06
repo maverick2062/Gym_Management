@@ -15,13 +15,15 @@ class Employee:
     including registration, authentication, and activity logging.
     """
 
-    def __init__(self, user_id, name, email, role, salary=0):
+    def __init__(self, user_id, name, email, role, salary=0, password=None, join_date=None):
         """Initializes an Employee object with data for an existing employee."""
         self.user_id = user_id
         self.name = name
         self.email = email
         self.role = role
         self.salary = salary
+        self.password = password # Storing the hash on the object
+        self.join_date = join_date
 
     @staticmethod
     def email_exists(email: str) -> bool:
@@ -64,7 +66,7 @@ class Employee:
     @classmethod
     def authenticate(cls, email: str, password: str) -> Optional['Employee']:
         """Authenticates an employee by verifying their email and password."""
-        query = "SELECT user_id, name, email, password, role, salary FROM Employee WHERE email = %s"
+        query = "SELECT user_id, name, email, password, role, salary, join_date FROM Employee WHERE email = %s"
         try:
             with get_db_connection() as conn:
                 with conn.cursor(dictionary=True) as cursor:
@@ -92,7 +94,7 @@ class Employee:
     def get_all() -> list['Employee']:
         """Retrieves all employees from the database."""
         employees_list = []
-        query = "SELECT user_id, name, email, role, salary FROM Employee ORDER BY name ASC"
+        query = "SELECT user_id, name, email, role, salary, join_date FROM Employee ORDER BY name ASC"
         try:
             with get_db_connection() as conn:
                 with conn.cursor(dictionary=True) as cursor:
@@ -106,7 +108,7 @@ class Employee:
     @staticmethod
     def find_by_id(user_id: int) -> Optional['Employee']:
         """Finds a single employee by their user_id."""
-        query = "SELECT user_id, name, email, role, salary FROM Employee WHERE user_id = %s"
+        query = "SELECT user_id, name, email, role, salary, join_date FROM Employee WHERE user_id = %s"
         try:
             with get_db_connection() as conn:
                 with conn.cursor(dictionary=True) as cursor:
@@ -176,3 +178,4 @@ class Employee:
                     conn.commit()
         except Error as e:
             logging.error(f"Failed to log activity for employee ID {employee_id}: {e}")
+
