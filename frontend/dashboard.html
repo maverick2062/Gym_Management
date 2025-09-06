@@ -88,6 +88,9 @@
         // --- Configuration ---
         const API_BASE_URL = 'http://127.0.0.1:5000/api';
 
+        // --- Global State ---
+        let currentUserData = null;
+
         // --- DOM Elements ---
         const userNameDisplay = document.getElementById('user-name');
         const userRoleDisplay = document.getElementById('user-role');
@@ -128,16 +131,17 @@
                 window.location.href = 'index.html';
                 return;
             }
-            setupUI(userData);
+            currentUserData = userData; // Store user data globally
+            setupUI(currentUserData);
         }
 
         // --- UI Setup ---
 
         function setupUI(userData) {
-            // UPDATED: Now correctly gets name from admin or other user tokens
             userNameDisplay.textContent = userData.name || userData.username || userData.email;
             userRoleDisplay.textContent = userData.role.charAt(0).toUpperCase() + userData.role.slice(1);
-
+            
+            // --- PERMISSION LOGIC ---
             const roles = {
                 member: [
                     { name: 'My Profile', icon: 'fa-user' },
@@ -149,6 +153,7 @@
                     { name: 'Equipment', icon: 'fa-cogs' }
                 ],
                 IT: [
+                    { name: 'Members', icon: 'fa-users' },
                     { name: 'Equipment', icon: 'fa-cogs' }
                 ],
                 admin: [
@@ -158,7 +163,6 @@
                 ]
             };
             
-            // Use the specific role (e.g., 'Trainer') from the token
             const navLinks = roles[userData.role] || [];
             navLinksContainer.innerHTML = navLinks.map(link => `
                 <a href="#" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white transition" data-action="${link.name.toLowerCase().replace(' ', '-')}">
@@ -198,26 +202,31 @@
                 localStorage.removeItem('jwt_token');
                 window.location.href = 'index.html';
             }
-            // Check if the response has content before trying to parse JSON
-            const contentType = response.headers.get("content-type");
+             const contentType = response.headers.get("content-type");
             if (contentType && contentType.indexOf("application/json") !== -1) {
                 return response.json();
             } else {
-                return null; // Or handle as an error
+                return null; 
             }
         }
 
         async function loadMembersView() {
             try {
                 const members = await fetchFromAPI('/members/');
-                if (!members) {
+                 if (!members) {
                     throw new Error("No data received from server");
                 }
+                
+                // --- PERMISSION LOGIC ---
+                // Conditionally show the 'Add New' button
+                const canAddMembers = currentUserData && ['admin', 'IT'].includes(currentUserData.role);
+                const addButtonHtml = canAddMembers ? `<button onclick="showCreateModal('member')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition">+ Add New</button>` : '';
+
                 let content = `
                     <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
                         <div class="flex justify-between items-center mb-4">
                             <h2 class="text-2xl font-bold">Member Management</h2>
-                            <button onclick="showCreateModal('member')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition">+ Add New</button>
+                            ${addButtonHtml}
                         </div>
                         <table class="w-full text-left">
                             <thead><tr class="border-b border-gray-700"><th class="p-2">ID</th><th class="p-2">Name</th><th class="p-2">Email</th><th class="p-2">Status</th></tr></thead>
@@ -262,7 +271,7 @@
         async function loadEquipmentView() {
             try {
                 const equipment = await fetchFromAPI('/equipment/');
-                 if (!equipment) {
+                if (!equipment) {
                     throw new Error("No data received from server");
                 }
                 let content = `
@@ -343,14 +352,14 @@
 
             try {
                 const result = await fetchFromAPI(endpoint, 'POST', data);
-                if (result.message) {
+                if (result && result.message) {
                     hideModal();
                     // Refresh the corresponding view
                     if (type === 'member') loadMembersView();
                     else if (type === 'employee') loadEmployeesView();
                     else if (type === 'equipment') loadEquipmentView();
                 } else {
-                    alert('Error: ' + result.error);
+                    alert('Error: ' + (result ? result.error : 'Unknown error'));
                 }
             } catch (error) {
                 console.error(`Failed to create ${type}:`, error);
