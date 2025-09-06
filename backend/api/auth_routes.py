@@ -31,7 +31,7 @@ def token_required(f):
 
         try:
             # Decode the token using the secret key from the app config
-            data = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256'])
+            data = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=['HS256']) # CORRECTED ALGORITHM
             # The decoded data (user info) is passed to the route
             current_user = data
         except jwt.ExpiredSignatureError:
@@ -93,6 +93,7 @@ def login_member():
         'user_id': member.member_ID,
         'email': member.email,
         'role': 'member',
+        'name': member.name, # Added name to payload
         'exp': datetime.utcnow() + timedelta(hours=24)  # Token expires in 24 hours
     }
     
@@ -105,6 +106,7 @@ def login_member():
 def login_admin():
     """API endpoint for admin login."""
     data = request.get_json()
+    # Admin login is with username, not email
     if not data or not data.get('username') or not data.get('password'):
         return jsonify({"error": "Missing username or password"}), 400
 
@@ -114,8 +116,9 @@ def login_admin():
         return jsonify({"error": "Invalid credentials"}), 401
 
     token_payload = {
-        'user_id': admin.admin_ID,
+        'user_id': admin.ad_ID, # CORRECTED: Accesses the correct attribute
         'username': admin.username,
+        'name': admin.name, # Added name to payload
         'role': 'admin',
         'exp': datetime.utcnow() + timedelta(hours=24)
     }
@@ -140,6 +143,7 @@ def login_employee():
     token_payload = {
         'user_id': employee.user_id,
         'email': employee.email,
+        'name': employee.name, # Added name to payload
         'role': employee.role, # Role can be 'IT' or 'Trainer'
         'exp': datetime.utcnow() + timedelta(hours=24)
     }
@@ -147,3 +151,4 @@ def login_employee():
     token = jwt.encode(token_payload, current_app.config['SECRET_KEY'], algorithm='HS256')
     
     return jsonify({'message': 'Login successful', 'token': token})
+

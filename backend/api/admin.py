@@ -17,7 +17,7 @@ class Admin:
 
     def __init__(self, ad_ID, name, username):
         """Initializes an Admin object with data for an existing administrator."""
-        self.admin_ID = ad_ID
+        self.ad_ID = ad_ID  # CORRECTED: Attribute now matches database column
         self.name = name
         self.username = username
 
