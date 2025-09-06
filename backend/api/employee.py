@@ -15,11 +15,16 @@ class Employee:
     including registration, authentication, and activity logging.
     """
 
+<<<<<<< HEAD
     def __init__(self, user_id, name, email, role, salary=0, password=None, join_date=None):
+=======
+    def __init__(self, user_id, name, email, password, role, salary=0):
+>>>>>>> bde6e4e (Debugged the employee and user files as well. Fixed class attribute names to match database schema. Corrected table name in connection.py from Equipments to Equipment for grammatical accuracy.)
         """Initializes an Employee object with data for an existing employee."""
         self.user_id = user_id
         self.name = name
         self.email = email
+        self.password = password  # Password is not stored in plain text
         self.role = role
         self.salary = salary
         self.password = password # Storing the hash on the object
@@ -52,13 +57,16 @@ class Employee:
         query = "INSERT INTO Employee (name, email, password, role, salary) VALUES (%s, %s, %s, %s, %s)"
         
         try:
-            with get_db_connection() as conn:
-                with conn.cursor() as cursor:
-                    cursor.execute(query, (name, email, hashed_pw, role, salary))
-                    conn.commit()
-                    user_id = cursor.lastrowid
-                    logging.info(f"Successfully registered new employee: {name} ({email}) with ID: {user_id}")
-                    return cls(user_id=user_id, name=name, email=email, role=role, salary=salary)
+            conn = get_db_connection()
+            if conn is None:
+                logging.error("Failed to establish database connection.")
+                return None
+            with conn.cursor() as cursor:
+                cursor.execute(query, (name, email, hashed_pw, role, salary))
+                conn.commit()
+                user_id = cursor.lastrowid
+                logging.info(f"Successfully registered new employee: {name} ({email}) with ID: {user_id}")
+                return cls(user_id=user_id, name=name, email=email, password=hashed_pw, role=role, salary=salary)
         except Error as e:
             logging.error(f"Failed to register employee {name}: {e}")
             return None
@@ -68,24 +76,27 @@ class Employee:
         """Authenticates an employee by verifying their email and password."""
         query = "SELECT user_id, name, email, password, role, salary, join_date FROM Employee WHERE email = %s"
         try:
-            with get_db_connection() as conn:
-                with conn.cursor(dictionary=True) as cursor:
-                    cursor.execute(query, (email,))
-                    result = cursor.fetchone()
+            conn = get_db_connection()
+            if conn is None:         
+                logging.error("Failed to establish database connection.")
+                return None
+            with conn.cursor(dictionary=True) as cursor:
+                cursor.execute(query, (email,))
+                result = cursor.fetchone()
+                
+                if not result:
+                    logging.warning(f"Employee login failed: No user found with email {email}")
+                    return None
                     
-                    if not result:
-                        logging.warning(f"Employee login failed: No user found with email {email}")
-                        return None
-                        
-                    if verify_password(password, result['password']):
-                        logging.info(f"Login successful for employee: {result['name']} ({email})")
-                        cls._log_activity(result['user_id'], "Login Successful")
-                        # Unpack the full dictionary into the constructor
-                        return cls(**result)
-                    else:
-                        logging.warning(f"Employee login failed: Invalid password for {email}")
-                        cls._log_activity(result['user_id'], "Invalid Password")
-                        return None
+                if verify_password(password, result['password']):
+                    logging.info(f"Login successful for employee: {result['name']} ({email})")
+                    cls._log_activity(result['user_id'], "Login Successful")
+                    # Unpack the full dictionary into the constructor
+                    return cls(**result)
+                else:
+                    logging.warning(f"Employee login failed: Invalid password for {email}")
+                    cls._log_activity(result['user_id'], "Invalid Password")
+                    return None
         except Error as e:
             logging.error(f"Database error during employee authentication for {email}: {e}")
             return None
