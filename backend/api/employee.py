@@ -14,12 +14,7 @@ class Employee:
     Represents a gym employee and handles all related database operations,
     including registration, authentication, and activity logging.
     """
-
-<<<<<<< HEAD
-    def __init__(self, user_id, name, email, role, salary=0, password=None, join_date=None):
-=======
-    def __init__(self, user_id, name, email, password, role, salary=0):
->>>>>>> bde6e4e (Debugged the employee and user files as well. Fixed class attribute names to match database schema. Corrected table name in connection.py from Equipments to Equipment for grammatical accuracy.)
+    def __init__(self, user_id, name, email, password, role, salary=0, join_date=None):
         """Initializes an Employee object with data for an existing employee."""
         self.user_id = user_id
         self.name = name
