@@ -134,7 +134,8 @@
         // --- UI Setup ---
 
         function setupUI(userData) {
-            userNameDisplay.textContent = userData.name || userData.username;
+            // UPDATED: Now correctly gets name from admin or other user tokens
+            userNameDisplay.textContent = userData.name || userData.username || userData.email;
             userRoleDisplay.textContent = userData.role.charAt(0).toUpperCase() + userData.role.slice(1);
 
             const roles = {
@@ -142,8 +143,12 @@
                     { name: 'My Profile', icon: 'fa-user' },
                     { name: 'Workout Plan', icon: 'fa-dumbbell' }
                 ],
-                employee: [
+                // UPDATED: Added specific roles for Trainer and IT
+                Trainer: [
                     { name: 'Members', icon: 'fa-users' },
+                    { name: 'Equipment', icon: 'fa-cogs' }
+                ],
+                IT: [
                     { name: 'Equipment', icon: 'fa-cogs' }
                 ],
                 admin: [
@@ -152,7 +157,8 @@
                     { name: 'Equipment', icon: 'fa-cogs' }
                 ]
             };
-
+            
+            // Use the specific role (e.g., 'Trainer') from the token
             const navLinks = roles[userData.role] || [];
             navLinksContainer.innerHTML = navLinks.map(link => `
                 <a href="#" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white transition" data-action="${link.name.toLowerCase().replace(' ', '-')}">
@@ -192,12 +198,21 @@
                 localStorage.removeItem('jwt_token');
                 window.location.href = 'index.html';
             }
-            return response.json();
+            // Check if the response has content before trying to parse JSON
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                return response.json();
+            } else {
+                return null; // Or handle as an error
+            }
         }
 
         async function loadMembersView() {
             try {
                 const members = await fetchFromAPI('/members/');
+                if (!members) {
+                    throw new Error("No data received from server");
+                }
                 let content = `
                     <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
                         <div class="flex justify-between items-center mb-4">
@@ -221,6 +236,9 @@
         async function loadEmployeesView() {
             try {
                 const employees = await fetchFromAPI('/employees/');
+                 if (!employees) {
+                    throw new Error("No data received from server");
+                }
                 let content = `
                     <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
                          <div class="flex justify-between items-center mb-4">
@@ -244,6 +262,9 @@
         async function loadEquipmentView() {
             try {
                 const equipment = await fetchFromAPI('/equipment/');
+                 if (!equipment) {
+                    throw new Error("No data received from server");
+                }
                 let content = `
                     <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
                         <div class="flex justify-between items-center mb-4">
@@ -350,3 +371,4 @@
     </script>
 </body>
 </html>
+
