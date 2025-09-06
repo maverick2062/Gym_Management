@@ -116,7 +116,6 @@ def setup_database():
                 ''')
 
                 # Member Login Details (MLD) table to log member sign-ins
-                # FIX: Foreign key now correctly references the Members table
                 cursor.execute('''
                     CREATE TABLE IF NOT EXISTS MLD(
                         login_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -129,7 +128,6 @@ def setup_database():
                 ''')
                 
                 # Equipment table to track gym assets
-                # NOTE: Changed table name from Equipments to Equipment for grammatical correctness
                 cursor.execute('''
                     CREATE TABLE IF NOT EXISTS Equipment(
                         e_code INT AUTO_INCREMENT PRIMARY KEY,

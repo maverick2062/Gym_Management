@@ -12,12 +12,10 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 class Member:
     """
     Represents a gym member and handles all related database operations
-    such as registration, authentication, and data management (CRUD).
-    """
-
-    def __init__(self, member_id, name, email, password, status, phone_number=None, membership_plan=None, join_date=None):
+    such as registration, authentication, and data management (CRUD)."""
+    def __init__(self, member_ID, name, email, password, status, phone_number=None, membership_plan=None, join_date=None, created_at=None, updated_at=None):
         """Initializes a Member object with data for an existing member."""
-        self.member_id = member_id
+        self.member_ID = member_ID
         self.name = name
         self.email = email
         self.password = password
@@ -25,6 +23,8 @@ class Member:
         self.phone_number = phone_number
         self.membership_plan = membership_plan
         self.join_date = join_date
+        self.created_at = created_at
+        self.updated_at = updated_at
 
     # --- Authentication and Creation Methods ---
 
@@ -66,9 +66,9 @@ class Member:
             with conn.cursor() as cursor:
                 cursor.execute(query, (name, email, hashed_pw, phone_number, membership_plan, join_date))
                 conn.commit()
-                member_id = cursor.lastrowid
-                logging.info(f"Successfully registered new member: {name} ({email}) with ID: {member_id}")
-                return cls(member_id=member_id, name=name, email=email, password=hashed_pw, status='active')
+                member_ID = cursor.lastrowid
+                logging.info(f"Successfully registered new member: {name} ({email}) with ID: {member_ID}")
+                return cls(member_ID=member_ID, name=name, email=email, password=hashed_pw, status='active')
         except Error as e:
             logging.error(f"Failed to register member {name}: {e}")
             return None
@@ -94,7 +94,7 @@ class Member:
                 if verify_password(password, result['password']):
                     logging.info(f"Login successful for member: {result['name']} ({email})")
                     cls._log_activity(result['member_ID'], "Login Successful")
-                    return cls(member_id=result['member_ID'], name=result['name'], email=result['email'], password=result['password'], status=result['status'])
+                    return cls(member_ID=result['member_ID'], name=result['name'], email=result['email'], password=result['password'], status=result['status'])
                 else:
                     logging.warning(f"Login failed: Invalid password for {email}")
                     cls._log_activity(result['member_ID'], "Invalid Password")
@@ -120,14 +120,16 @@ class Member:
                 return []
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(query)
-                for row in cursor.fetchall():
-                    members_list.append(Member(**row))
+                res = cursor.fetchall()
+                if res:
+                    for row in res:
+                        members_list.append(Member(**row))
         except Error as e:
             logging.error(f"Database error while fetching all members: {e}")
         return members_list
 
     @staticmethod
-    def find_by_id(member_id: int) -> Optional['Member']:
+    def find_by_id(member_ID: int) -> Optional['Member']:
         """Finds a single member by their ID."""
         query = "SELECT * FROM Members WHERE member_ID = %s"
         try:
@@ -136,16 +138,16 @@ class Member:
                 logging.error("Failed to establish database connection.")
                 return None
             with conn.cursor(dictionary=True) as cursor:
-                cursor.execute(query, (member_id,))
+                cursor.execute(query, (member_ID,))
                 result = cursor.fetchone()
                 if result:
                     return Member(**result)
         except Error as e:
-            logging.error(f"Database error finding member by ID {member_id}: {e}")
+            logging.error(f"Database error finding member by ID {member_ID}: {e}")
         return None
 
     @staticmethod
-    def update(member_id: int, updates: dict) -> Optional['Member']:
+    def update(member_ID: int, updates: dict) -> Optional['Member']:
         """Updates one or more fields for a member."""
         valid_columns = ['name', 'email', 'phone_number', 'membership_plan', 'status']
         
@@ -155,7 +157,7 @@ class Member:
             return None
 
         query = f"UPDATE Members SET {', '.join(set_clause_parts)} WHERE member_ID = %s"
-        values = list(updates.values()) + [member_id]
+        values = list(updates.values()) + [member_ID]
 
         try:
             conn = get_db_connection()
@@ -166,13 +168,13 @@ class Member:
                 cursor.execute(query, tuple(values))
                 conn.commit()
                 if cursor.rowcount > 0:
-                    return Member.find_by_id(member_id)
+                    return Member.find_by_id(member_ID)
         except Error as e:
-            logging.error(f"Database error updating member {member_id}: {e}")
+            logging.error(f"Database error updating member {member_ID}: {e}")
         return None
 
     @staticmethod
-    def delete(member_id: int) -> bool:
+    def delete(member_ID: int) -> bool:
         """Deletes a member from the database."""
         query = "DELETE FROM Members WHERE member_ID = %s"
         try:
@@ -181,17 +183,17 @@ class Member:
                 logging.error("Failed to establish database connection.")
                 return False
             with conn.cursor() as cursor:
-                cursor.execute(query, (member_id,))
+                cursor.execute(query, (member_ID,))
                 conn.commit()
                 return cursor.rowcount > 0
         except Error as e:
-            logging.error(f"Database error deleting member {member_id}: {e}")
+            logging.error(f"Database error deleting member {member_ID}: {e}")
         return False
 
     # --- Private Helper Methods ---
     
     @staticmethod
-    def _log_activity(member_id: int, status: str):
+    def _log_activity(member_ID: int, status: str):
         """Private helper to log login attempts to the MLD table."""
         query = "INSERT INTO MLD (mem_id, login_status) VALUES (%s, %s)"
         try:
@@ -200,7 +202,9 @@ class Member:
                 logging.error("Failed to establish database connection.")
                 return
             with conn.cursor() as cursor:
-                cursor.execute(query, (member_id, status))
+                cursor.execute(query, (member_ID, status))
                 conn.commit()
         except Error as e:
-            logging.error(f"Failed to log activity for member ID {member_id}: {e}")
+            logging.error(f"Failed to log activity for member ID {member_ID}: {e}")
+
+

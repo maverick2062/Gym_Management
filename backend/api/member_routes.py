@@ -19,7 +19,7 @@ def get_all_members(current_user):
     
     # Convert the list of Member objects into a list of dictionaries
     members_list = [
-        {"member_id": m.member_id, "name": m.name, "email": m.email, "password": m.password, "status": m.status} 
+        {"member_id": m.member_ID, "name": m.name, "email": m.email, "password": m.password, "status": m.status} 
         for m in members
     ]
     
@@ -27,12 +27,12 @@ def get_all_members(current_user):
 
 @member_bp.route('/<int:member_id>', methods=['GET'])
 @token_required
-def get_member_by_id(current_user, member_id):
+def get_member_by_id(current_user, member_ID):
     """API endpoint to get a single member by their ID."""
-    member = Member.find_by_id(member_id) # This method needs to be created
+    member = Member.find_by_id(member_ID) # This method needs to be created
     if member:
         return jsonify({
-            "member_id": member.member_id, 
+            "member_id": member.member_ID, 
             "name": member.name, 
             "email": member.email,
             "password": member.password,
@@ -41,15 +41,15 @@ def get_member_by_id(current_user, member_id):
     else:
         return jsonify({"error": "Member not found"}), 404
 
-@member_bp.route('/<int:member_id>', methods=['PUT'])
+@member_bp.route('/<int:member_ID>', methods=['PUT'])
 @token_required
-def update_member(current_user, member_id):
+def update_member(current_user, member_ID):
     """API endpoint to update an existing member's details."""
     data = request.get_json()
     if not data:
         return jsonify({"error": "No update data provided"}), 400
 
-    updated_member = Member.update(member_id, data) # This method needs to be created
+    updated_member = Member.update(member_ID, data) # This method needs to be created
     
     if updated_member:
         return jsonify({"message": "Member updated successfully"}), 200
@@ -58,15 +58,15 @@ def update_member(current_user, member_id):
 
 @member_bp.route('/<int:member_id>', methods=['DELETE'])
 @token_required
-def delete_member(current_user, member_id):
+def delete_member(current_user, member_ID):
     """API endpoint to delete a member."""
     # Add role check for extra security
     if current_user['role'] != 'admin':
         return jsonify({"error": "Unauthorized: Only admins can delete members"}), 403
 
-    success = Member.delete(member_id) # This method needs to be created
+    success = Member.delete(member_ID) # This method needs to be created
     
     if success:
-        return jsonify({"message": f"Member with ID {member_id} deleted successfully."}), 200
+        return jsonify({"message": f"Member with ID {member_ID} deleted successfully."}), 200
     else:
         return jsonify({"error": "Member not found or deletion failed"}), 404
