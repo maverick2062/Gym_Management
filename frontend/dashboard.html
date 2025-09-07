@@ -141,13 +141,11 @@
             userNameDisplay.textContent = userData.name || userData.username || userData.email;
             userRoleDisplay.textContent = userData.role.charAt(0).toUpperCase() + userData.role.slice(1);
             
-            // --- PERMISSION LOGIC ---
             const roles = {
                 member: [
                     { name: 'My Profile', icon: 'fa-user' },
                     { name: 'Workout Plan', icon: 'fa-dumbbell' }
                 ],
-                // UPDATED: Added specific roles for Trainer and IT
                 Trainer: [
                     { name: 'Members', icon: 'fa-users' },
                     { name: 'Equipment', icon: 'fa-cogs' }
@@ -209,6 +207,41 @@
                 return null; 
             }
         }
+        
+        // --- NEW HELPER FUNCTIONS for Date Formatting ---
+
+        function formatDateWithOrdinal(date) {
+            const d = date.getDate();
+            const nth = (d > 3 && d < 21) ? 'th' : ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'][d % 10];
+            const month = date.toLocaleString('default', { month: 'short' });
+            const year = date.getFullYear();
+            return `${d}${nth} ${month} ${year}`;
+        }
+
+        function calculateMembershipDuration(joinDateStr, plan) {
+            if (!joinDateStr || !plan) return 'N/A';
+
+            const startDate = new Date(joinDateStr);
+            // Adjust for timezone offset to prevent date from shifting
+            startDate.setMinutes(startDate.getMinutes() + startDate.getTimezoneOffset());
+
+            const endDate = new Date(startDate);
+
+            const planType = plan.toLowerCase();
+            if (planType.includes('monthly')) {
+                endDate.setMonth(endDate.getMonth() + 1);
+            } else if (planType.includes('quarterly')) {
+                endDate.setMonth(endDate.getMonth() + 3);
+            } else if (planType.includes('yearly')) {
+                endDate.setFullYear(endDate.getFullYear() + 1);
+            } else {
+                // If plan is not recognized, just show the start date
+                return `Starts ${formatDateWithOrdinal(startDate)}`;
+            }
+
+            return `${formatDateWithOrdinal(startDate)} - ${formatDateWithOrdinal(endDate)}`;
+        }
+
 
         async function loadMembersView() {
             try {
@@ -217,24 +250,42 @@
                     throw new Error("No data received from server");
                 }
                 
-                // --- PERMISSION LOGIC ---
-                // Conditionally show the 'Add New' button
                 const canAddMembers = currentUserData && ['admin', 'IT'].includes(currentUserData.role);
                 const addButtonHtml = canAddMembers ? `<button onclick="showCreateModal('member')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition">+ Add New</button>` : '';
 
+                // --- UPDATED TABLE STRUCTURE ---
                 let content = `
                     <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
                         <div class="flex justify-between items-center mb-4">
                             <h2 class="text-2xl font-bold">Member Management</h2>
                             ${addButtonHtml}
                         </div>
-                        <table class="w-full text-left">
-                            <thead><tr class="border-b border-gray-700"><th class="p-2">ID</th><th class="p-2">Name</th><th class="p-2">Email</th><th class="p-2">Status</th></tr></thead>
-                            <tbody>`;
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead>
+                                    <tr class="border-b border-gray-700">
+                                        <th class="p-2">Name</th>
+                                        <th class="p-2">Email</th>
+                                        <th class="p-2">Phone</th>
+                                        <th class="p-2">Plan</th>
+                                        <th class="p-2">Duration</th>
+                                        <th class="p-2">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
                 members.forEach(member => {
-                    content += `<tr class="border-b border-gray-700 hover:bg-gray-700"><td class="p-2">${member.member_id}</td><td class="p-2">${member.name}</td><td class="p-2">${member.email}</td><td class="p-2"><span class="px-2 py-1 text-xs rounded-full ${member.status === 'active' ? 'bg-green-500 text-green-900' : 'bg-red-500 text-red-900'}">${member.status}</span></td></tr>`;
+                    const duration = calculateMembershipDuration(member.join_date, member.membership_plan);
+                    content += `
+                        <tr class="border-b border-gray-700 hover:bg-gray-700">
+                            <td class="p-2">${member.name}</td>
+                            <td class="p-2">${member.email}</td>
+                            <td class="p-2">${member.phone_number || 'N/A'}</td>
+                            <td class="p-2">${member.membership_plan || 'N/A'}</td>
+                            <td class="p-2">${duration}</td>
+                            <td class="p-2"><span class="px-2 py-1 text-xs font-semibold rounded-full ${member.status === 'active' ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}">${member.status}</span></td>
+                        </tr>`;
                 });
-                content += `</tbody></table></div>`;
+                content += `</tbody></table></div></div>`;
                 contentArea.innerHTML = content;
             } catch (error) {
                 contentArea.innerHTML = `<div class="text-red-400">Failed to load members.</div>`;
@@ -308,7 +359,7 @@
                     <input type="email" name="email" placeholder="Email Address" class="w-full p-2 mb-4 bg-gray-700 rounded" required>
                     <input type="password" name="password" placeholder="Password" class="w-full p-2 mb-4 bg-gray-700 rounded" required>
                     <input type="text" name="phone_number" placeholder="Phone Number" class="w-full p-2 mb-4 bg-gray-700 rounded">
-                    <input type="text" name="membership_plan" placeholder="Membership Plan" class="w-full p-2 bg-gray-700 rounded" required>
+                    <input type="text" name="membership_plan" placeholder="Membership Plan (e.g., Monthly)" class="w-full p-2 bg-gray-700 rounded" required>
                 `;
             } else if (type === 'employee') {
                 modalTitle.textContent = 'Add New Employee';
@@ -346,7 +397,8 @@
             const data = Object.fromEntries(formData.entries());
 
             let endpoint = '';
-            if (type === 'member') endpoint = '/auth/register/member'; // Uses the public registration route
+            // UPDATED: Use the correct endpoint for adding a member from the dashboard
+            if (type === 'member') endpoint = '/members/add'; 
             else if (type === 'employee') endpoint = '/employees/add';
             else if (type === 'equipment') endpoint = '/equipment/add';
 
@@ -380,4 +432,3 @@
     </script>
 </body>
 </html>
-

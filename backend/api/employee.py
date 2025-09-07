@@ -62,7 +62,8 @@ class Employee:
                 user_id = cursor.lastrowid
                 logging.info(f"Successfully registered new employee: {name} ({email}) with ID: {user_id}")
                 # Fetch the newly created employee to return a full object
-                return cls.find_by_id(user_id)
+                if user_id:
+                    return cls.find_by_id(user_id)
         except Error as e:
             logging.error(f"Failed to register employee {name}: {e}")
             return None

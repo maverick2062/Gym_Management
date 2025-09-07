@@ -9,16 +9,15 @@ member_bp = Blueprint('member_bp', __name__)
 def get_all_members(current_user):
     """
     API endpoint to get a list of all members.
-    Accessible by admin, IT, and Trainer roles.
+    Accessible only by authenticated users.
     """
-    # Any authorized employee or admin can view members
-    allowed_roles = ['admin', 'IT', 'Trainer']
-    if current_user.get('role') not in allowed_roles:
+    # Security Check: Only admins and employees can view the full member list
+    if current_user['role'] not in ['admin', 'IT', 'Trainer']:
         return jsonify({"error": "Unauthorized access"}), 403
 
     members = Member.get_all()
     
-    # Convert member objects to a list of dictionaries for JSON serialization
+    # Convert the list of Member objects into a list of dictionaries
     members_list = [
         {
             "member_id": m.member_ID, 
@@ -36,13 +35,9 @@ def get_all_members(current_user):
 
 @member_bp.route('/<int:member_id>', methods=['GET'])
 @token_required
-def get_member_by_id(current_user, member_id):
+def get_member_by_id(current_user, member_ID):
     """API endpoint to get a single member by their ID."""
-    allowed_roles = ['admin', 'IT', 'Trainer']
-    if current_user.get('role') not in allowed_roles:
-        return jsonify({"error": "Unauthorized access"}), 403
-
-    member = Member.find_by_id(member_id)
+    member = Member.find_by_id(member_ID)
     if member:
         return jsonify({
             "member_id": member.member_ID, 
@@ -56,36 +51,34 @@ def get_member_by_id(current_user, member_id):
     else:
         return jsonify({"error": "Member not found"}), 404
 
-@member_bp.route('/update/<int:member_id>', methods=['PUT'])
+@member_bp.route('/<int:member_ID>', methods=['PUT'])
 @token_required
-def update_member(current_user, member_id):
-    """API endpoint to update a member. Only accessible by Admin and IT."""
-    allowed_roles = ['admin', 'IT']
-    if current_user.get('role') not in allowed_roles:
-        return jsonify({"error": "Unauthorized: You do not have permission to update members."}), 403
+def update_member(current_user, member_ID):
+    """API endpoint to update an existing member's details."""
+    if current_user['role'] not in ['admin', 'IT']:
+         return jsonify({"error": "Unauthorized: Only admins or IT can update member details"}), 403
 
     data = request.get_json()
     if not data:
         return jsonify({"error": "No update data provided"}), 400
 
-    updated_member = Member.update(member_id, data)
+    updated_member = Member.update(member_ID, data)
     
     if updated_member:
         return jsonify({"message": "Member updated successfully"}), 200
     else:
         return jsonify({"error": "Member not found or update failed"}), 404
 
-@member_bp.route('/delete/<int:member_id>', methods=['DELETE'])
+@member_bp.route('/<int:member_id>', methods=['DELETE'])
 @token_required
-def delete_member(current_user, member_id):
-    """API endpoint to delete a member. Only accessible by Admin and IT."""
-    allowed_roles = ['admin', 'IT']
-    if current_user.get('role') not in allowed_roles:
-        return jsonify({"error": "Unauthorized: You do not have permission to delete members."}), 403
+def delete_member(current_user, member_ID):
+    """API endpoint to delete a member."""
+    if current_user['role'] != 'admin':
+        return jsonify({"error": "Unauthorized: Only admins can delete members"}), 403
 
-    success = Member.delete(member_id)
+    success = Member.delete(member_ID)
     
     if success:
-        return jsonify({"message": f"Member with ID {member_id} deleted successfully."}), 200
+        return jsonify({"message": f"Member with ID {member_ID} deleted successfully."}), 200
     else:
         return jsonify({"error": "Member not found or deletion failed"}), 404
