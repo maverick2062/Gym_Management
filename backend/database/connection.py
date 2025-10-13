@@ -20,7 +20,8 @@ def get_db_connection():
             host='localhost',
             user='root',
             password=os.getenv('MYSQL_PASSWORD'),
-            database='GymDB'
+            database='GymDB',
+            charset='utf8mb4'
         )
         if connection.is_connected():
             logging.info("Successfully connected to the GymDB database.")
@@ -40,7 +41,8 @@ def setup_database():
         with mysql.connector.connect(
             host='localhost',
             user='root',
-            password=os.getenv('MYSQL_PASSWORD')
+            password=os.getenv('MYSQL_PASSWORD'),
+            charset='utf8mb4'
         ) as conn:
             with conn.cursor() as cursor:
                 # Create the database if it doesn't already exist
