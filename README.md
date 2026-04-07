@@ -57,7 +57,7 @@ gym_monk_project/
     └── register.html           # Public member signup page
 ```
 ## ⚙️ Installation & Setup
-** 1. Database Configuration
+**1. Database Configuration**
 Ensure MySQL is running and create a `.env` file in the `Backend/` directory:
 
 ``` bash
@@ -65,7 +65,7 @@ MYSQL_PASSWORD=your_password
 SECRET_KEY=your_jwt_secret_key
 ```
 
-** 2. Running the Backend
+**2. Running the Backend**
 You must navigate into the `Backend` folder to run the server:
 
 ```bash 
@@ -79,7 +79,7 @@ cd Backend
 python main.py
 ```
 
-**3. Frontend Access
+**3. Frontend Access**
 Once the backend logs `Successfully connected to the GymDB database`, open `Frontend/index.html` in your browser.
 
 Developed as a comprehensive management solution for modern fitness centers.
