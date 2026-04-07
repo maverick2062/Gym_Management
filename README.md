@@ -58,6 +58,7 @@ gym_monk_project/
 ```
 ## ⚙️ Installation & Setup
 **1. Database Configuration**
+
 Ensure MySQL is running and create a `.env` file in the `Backend/` directory:
 
 ``` bash
