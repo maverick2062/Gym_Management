@@ -1,180 +1,89 @@
-# GymMonk - Gym Management System
+# GymMonk - Integrated Gym Management System
 
-GymMonk is a web-based application designed to help gym owners and staff manage members, employees, and equipment efficiently. It provides role-based access control, secure authentication, and a clean user interface.
+GymMonk is a full-stack gym management solution featuring a Flask-based REST API, a secure MySQL database backend, and a dynamic, role-based dashboard frontend.
 
-## Features
+## 🚀 Key Features
 
-Role-Based Access Control: Distinct interfaces and permissions for Admins, Employees (IT, Trainer), and Members.
+* **Role-Based Access Control:** Distinct interfaces and permissions for Admins, Employees, and Members.
+* **Member Management:** Full CRUD operations for tracking memberships, contact info, and status.
+* **Inventory Tracking:** Manage gym equipment, quantities, and unit pricing.
+* **Security:** Password hashing using Bcrypt and stateless authentication via JWT (JSON Web Tokens).
+* **Automated Database Setup:** Self-initializing MySQL schema on first run.
 
-Secure Authentication: Uses bcrypt for password hashing and JWT (JSON Web Tokens) for session management.
+## 🛠️ Technology Stack
 
-Member Management: Admins and IT staff can add, view, update, and delete member information (including membership plan, join date, status). Trainers can view member details.
+### Backend
+* **Python 3.x**: Core programming language.
+* **Flask**: Micro web framework for the REST API.
+* **mysql-connector-python**: Database driver for MySQL connectivity.
+* **bcrypt**: Library for secure password hashing.
+* **PyJWT**: Implementation of JSON Web Tokens for authentication.
+* **python-dotenv**: For managing environment variables securely.
+* **Flask-Cors**: Handling Cross-Origin Resource Sharing.
 
-Employee Management: Admins can add, view, update, and delete employee records (Trainers, IT Staff).
+### Database
+* **MySQL**: Relational database management system.
 
-Equipment Management: Admins and Employees can add, view, update, and delete gym equipment inventory.
+### Frontend
+* **HTML5 / CSS3**: Styled using **Tailwind CSS**.
+* **JavaScript (Vanilla JS)**: ES6+ for interactivity and API integration.
 
-Dynamic Dashboard: Frontend dashboard adapts based on the logged-in user's role.
+## 📁 Project Structure
 
-Database Integration: Uses MySQL for persistent data storage.
-
-Technology Stack
-
-Backend:
-
-Python 3.x
-
-Flask (Web Framework)
-
-mysql-connector-python (Database Driver)
-
-bcrypt (Password Hashing)
-
-PyJWT (JSON Web Tokens)
-
-python-dotenv (Environment Variables)
-
-Flask-Cors (Cross-Origin Resource Sharing)
-
-Database:
-
-MySQL
-
-Frontend:
-
-HTML5
-
-CSS3 (with Tailwind CSS for styling)
-
-JavaScript (Vanilla JS for interactivity and API calls)
-
-Environment:
-
-Python Virtual Environment (venv)
-
-Project Structure
-
+```text
 gym_monk_project/
-│
 ├── Backend/
-│   ├── main.py             # Main application entry point
-│   ├── .env                # Environment variables (DB password, JWT secret)
-│   ├── requirements.txt    # Python dependencies
-│   ├── create_admin.py     # Script to create the first admin user
-│   │
-│   ├── api/                # Contains API blueprints and data models
+│   ├── api/                    # API Blueprints & Data Models
 │   │   ├── __init__.py
-│   │   ├── auth_routes.py
-│   │   ├── member_routes.py
-│   │   ├── employee_routes.py
-│   │   ├── equipment_routes.py
-│   │   ├── user.py         # Member class
-│   │   ├── admin.py        # Admin class
-│   │   ├── employee.py     # Employee class
-│   │   └── equipment.py    # Equipment class
-│   │
+│   │   ├── admin.py            # Admin logic & authentication
+│   │   ├── auth_routes.py      # Registration & Login endpoints
+│   │   ├── employee.py         # Employee class logic
+│   │   ├── employee_routes.py  # Employee management endpoints
+│   │   ├── equipment.py        # Equipment class logic
+│   │   ├── equipment_routes.py # Equipment management endpoints
+│   │   ├── member_routes.py    # Member management endpoints
+│   │   └── user.py             # Member class logic
 │   ├── core/
-│   │   └── security.py     # Password hashing logic
-│   │
-│   └── database/
-│       └── connection.py   # Database connection and schema setup
-│
+│   │   └── security.py         # Password hashing & JWT helper functions
+│   ├── database/
+│   │   └── connection.py       # MySQL connection & Schema initialization
+│   ├── .env                    # Secret keys and DB credentials
+│   ├── create_admin.py         # Script to generate initial admin account
+│   ├── main.py                 # Application entry point
+│   └── requirements.txt        # Project dependencies
 └── Frontend/
-    ├── index.html          # Login page
-    ├── register.html       # Member registration page
-    └── dashboard.html      # Main application dashboard
+    ├── dashboard.html          # Dynamic user dashboard
+    ├── index.html              # Main login page
+    └── register.html           # Public member signup page
+```
+## ⚙️ Installation & Setup
+** 1. Database Configuration
+Ensure MySQL is running and create a `.env` file in the `Backend/` directory:
 
+``` bash
+MYSQL_PASSWORD=your_password
+SECRET_KEY=your_jwt_secret_key
+```
 
-Setup and Installation
+** 2. Running the Backend
+You must navigate into the `Backend` folder to run the server:
 
-Follow these steps to get GymMonk running locally:
-
-Clone the Repository:
-
-git clone [https://github.com/your-username/GymMonk.git](https://github.com/your-username/GymMonk.git)
-cd GymMonk
-
-
-Database Setup:
-
-Ensure you have MySQL server installed and running.
-
-Create a .env file inside the Backend directory with your MySQL password and a secret key for JWT:
-
-MYSQL_PASSWORD=your_mysql_password
-SECRET_KEY=your_strong_secret_key_here
-
-
-The application will automatically create the GymDB database and tables on first run.
-
-Backend Setup:
-
-Navigate to the Backend directory:
-
+```bash 
+# Move into the directory
 cd Backend
 
+# Activate virtual environment (Windows PowerShell)
+& ./.venv/Scripts/Activate.ps1
 
-Create and activate a Python virtual environment:
+# Start the application
+python main.py
+```
 
-# Use 'py' on Windows if 'python' is not found
-python -m venv .venv
-# Activate (Windows PowerShell)
-.venv\Scripts\Activate.ps1
-# Activate (macOS/Linux/Git Bash)
-# source .venv/bin/activate
+**3. Frontend Access
+Once the backend logs `Successfully connected to the GymDB database`, open `Frontend/index.html` in your browser.
 
+Developed as a comprehensive management solution for modern fitness centers.
 
-Install the required dependencies:
-
-pip install -r requirements.txt
-
-
-Create Initial Admin User:
-
-Run the create_admin.py script once to create your first administrator account (configure details inside the script first):
-
-python create_admin.py
-
-
-Run the Backend Server:
-
-Start the Flask development server:
-
-flask --app main run
-
-
-The backend will be running at http://127.0.0.1:5000.
-
-Access the Frontend:
-
-Open the Frontend/index.html file directly in your web browser.
-
-Log in using the admin credentials you created.
-
-Usage
-
-Access the application by opening Frontend/index.html.
-
-Register as a new member using the "Sign Up" link.
-
-Log in using the appropriate user type (Member, Employee, Admin).
-
-Navigate the dashboard using the sidebar links based on your role.
-
-Future Enhancements
-
-Implement password reset functionality.
-
-Add detailed member profile pages.
-
-Develop workout plan features.
-
-Implement reporting and analytics.
-
-Add editing and deletion functionality to the dashboard views.
-
-Containerize the application using Docker.
-
-Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+```bash
+You can copy and paste this directly into your `README.md` file in your root directory. This version matches the exact project structure and tech stack we have been working on together.
+```
