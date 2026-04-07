@@ -1,6 +1,6 @@
 import logging
 from mysql.connector import Error
-from typing import Optional
+from typing import Dict, Any, Optional, cast
 
 # Import the database connection and security functions
 from database.connection import get_db_connection
@@ -45,12 +45,32 @@ class Member:
         except Error as e:
             logging.error(f"Database error while checking if email exists: {e}")
             return True
-
+    
+    @staticmethod
+    def phone_no_exists(phone_number: str) -> bool:
+        """Checks and ensures that all members have distinct mobile numbers"""
+        query = "SELECT phone_number FROM Members WHERE phone_number = %s"
+        try:
+            conn = get_db_connection()
+            if conn is None:
+                logging.error("Failed to establish database connection.")
+                return True #Fail safety
+            with conn.cursor() as cursor:
+                cursor.execute(query, (phone_number,))
+                return cursor.fetchone() is not None
+        except Error as e:
+            logging.error(f"Database error while checking if phone number exists: {e}")
+            return True
+            
     @classmethod
     def create(cls, name: str, email: str, password: str, phone_number: str, membership_plan: str, join_date: str) -> Optional['Member']:
         """Registers a new member by hashing their password and inserting them into the database."""
         if cls.email_exists(email):
             logging.warning(f"Registration attempt for already existing email: {email}")
+            return None
+        
+        if cls.phone_no_exists(phone_number):
+            logging.warning(f"Registration attempt for already existing phone number: {phone_number}")
             return None
 
         hashed_pw = hash_password(password)
@@ -69,8 +89,11 @@ class Member:
                 cursor.execute(query, (name, email, hashed_pw, phone_number, membership_plan, join_date))
                 conn.commit()
                 member_ID = cursor.lastrowid
+                if member_ID is None:
+                    logging.error("Failed to retrieve member ID after registration.")
+                    return None
                 logging.info(f"Successfully registered new member: {name} ({email}) with ID: {member_ID}")
-                return cls.find_by_id(member_ID)
+                return cls.find_by_id(member_ID) 
         except Error as e:
             logging.error(f"Failed to register member {name}: {e}")
             return None
@@ -92,7 +115,12 @@ class Member:
                 if not result:
                     logging.warning(f"Login failed: No user found with email {email}")
                     return None
-                    
+
+                # Type assert result as dict (safe after null check)
+                result = cast(Dict[str, Any], result)
+                member_ID = int(result['member_ID'])  # Extract and cast for type safety
+
+
                 if verify_password(password, result['password']):
                     logging.info(f"Login successful for member: {result['name']} ({email})")
                     cls._log_activity(result['member_ID'], "Login Successful")
@@ -139,6 +167,9 @@ class Member:
             with conn.cursor(dictionary=True) as cursor:
                 cursor.execute(query, (member_ID,))
                 result = cursor.fetchone()
+                """Casting the result into Dictionary as the type checker might infer it 
+                as a sequence(e.g., tuple,list)"""
+                result = cast(Dict[str, Any], result)
                 if result:
                     return Member(**result)
         except Error as e:

@@ -49,7 +49,16 @@ def register_member():
     """API endpoint for new gym member registration."""
     data = request.get_json()
     required_fields = ['name', 'email', 'password', 'phone_number', 'membership_plan']
-    if not all(field in data for field in required_fields):
+
+    """
+    The issue was that `data` is typed as `Any` | `None` (or possibly None), 
+    and the `in` operator requires a container type that supports membership testing.
+
+    When data is None, you can't use the 'in' operator since None isn't a container. 
+    The type checker doesn't know for certain that data is a dictionary or list.
+    """
+
+    if data is None or not all(field in data for field in required_fields):
         return jsonify({"error": "Missing required fields"}), 400
 
     # Set a default join_date if not provided
