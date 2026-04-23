@@ -4,172 +4,543 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GymMonk - Login</title>
-    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts for a modern look -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
     <style>
-        /* Use the Inter font family */
+        * { box-sizing: border-box; }
+
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Barlow', sans-serif;
+            background-color: #0f1117;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
         }
-        /* Custom styles for the background */
-        .bg-pattern {
-            background-color: #1a202c;
-            background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.1) 1px, transparent 0);
-            background-size: 20px 20px;
+
+        /* Animated background grid */
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 0;
         }
+
+        /* Glowing orbs in background */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.18;
+            z-index: 0;
+            animation: drift 12s ease-in-out infinite alternate;
+        }
+        .orb-1 { width: 400px; height: 400px; background: #6366f1; top: -100px; left: -100px; animation-duration: 14s; }
+        .orb-2 { width: 300px; height: 300px; background: #818cf8; bottom: -80px; right: -80px; animation-duration: 10s; }
+
+        @keyframes drift {
+            from { transform: translate(0, 0) scale(1); }
+            to   { transform: translate(30px, 20px) scale(1.08); }
+        }
+
+        /* Card */
+        .card {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 420px;
+            background: rgba(20, 22, 32, 0.85);
+            border: 1px solid rgba(99,102,241,0.2);
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03) inset;
+            backdrop-filter: blur(16px);
+            animation: slideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(28px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Logo */
+        .logo-text {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 2.6rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            background: linear-gradient(135deg, #fff 40%, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+        }
+        .logo-accent {
+            display: inline-block;
+            width: 8px; height: 8px;
+            background: #6366f1;
+            border-radius: 50%;
+            margin-left: 3px;
+            vertical-align: super;
+            box-shadow: 0 0 8px #6366f1;
+        }
+
+        /* Role Tabs */
+        .role-tabs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px;
+            padding: 4px;
+            gap: 4px;
+        }
+
+        .role-tabs input[type="radio"] { display: none; }
+
+        .role-tabs label {
+            display: block;
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            padding: 8px 4px;
+            border-radius: 7px;
+            cursor: pointer;
+            color: #6b7280;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .role-tabs input[type="radio"]:checked + label {
+            background: #4f46e5;
+            color: #fff;
+            box-shadow: 0 2px 12px rgba(79,70,229,0.5);
+        }
+
+        .role-tabs label:hover:not(.role-tabs input[type="radio"]:checked + label) {
+            color: #d1d5db;
+        }
+
+        /* Inputs */
+        .input-group {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .input-label {
+            display: block;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #6b7280;
+            margin-bottom: 6px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 11px 16px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            color: #f1f5f9;
+            font-family: 'Barlow', sans-serif;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+        }
+
+        .input-field::placeholder { color: #4b5563; }
+
+        .input-field:focus {
+            border-color: rgba(99,102,241,0.6);
+            background: rgba(99,102,241,0.06);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+        }
+
+        .input-field.error {
+            border-color: rgba(239,68,68,0.6);
+            background: rgba(239,68,68,0.05);
+        }
+
+        /* Password wrapper for toggle */
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-wrapper .input-field {
+            padding-right: 44px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #6b7280;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            transition: color 0.2s;
+        }
+        .toggle-password:hover { color: #a5b4fc; }
+
+        /* Error message */
+        .error-msg {
+            display: none;
+            font-size: 0.82rem;
+            color: #f87171;
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.2);
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 1rem;
+            text-align: center;
+            animation: shake 0.3s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25%       { transform: translateX(-6px); }
+            75%       { transform: translateX(6px); }
+        }
+
+        /* Submit button */
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #4f46e5, #6366f1);
+            color: #fff;
+            font-family: 'Barlow', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 20px rgba(79,70,229,0.35);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-login:hover:not(:disabled) {
+            background: linear-gradient(135deg, #4338ca, #4f46e5);
+            box-shadow: 0 6px 24px rgba(79,70,229,0.5);
+            transform: translateY(-1px);
+        }
+
+        .btn-login:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Spinner inside button */
+        .spinner {
+            display: none;
+            width: 16px; height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Divider */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 1.2rem 0;
+            color: #374151;
+            font-size: 0.75rem;
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255,255,255,0.06);
+        }
+
+        /* Signup link */
+        .signup-link { font-size: 0.85rem; color: #6b7280; text-align: center; }
+        .signup-link a { color: #818cf8; font-weight: 600; text-decoration: none; }
+        .signup-link a:hover { color: #a5b4fc; }
+
+        /* Forgot password */
+        .forgot-link {
+            font-size: 0.78rem;
+            color: #6b7280;
+            text-decoration: none;
+            float: right;
+            margin-top: -2px;
+            transition: color 0.2s;
+        }
+        .forgot-link:hover { color: #818cf8; }
     </style>
 </head>
-<body class="bg-pattern text-gray-200 flex items-center justify-center min-h-screen">
+<body>
 
-    <div class="w-full max-w-md mx-auto p-8 rounded-2xl bg-gray-800 bg-opacity-80 backdrop-blur-sm border border-gray-700 shadow-2xl">
-        
-        <!-- Header -->
-        <div class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-white tracking-tight">GymMonk</h1>
-            <p class="text-gray-400 mt-2">Welcome back! Please login to your account.</p>
+    <div class="bg-grid"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="card" role="main">
+
+        <!-- Logo -->
+        <div style="text-align:center; margin-bottom: 1.8rem;">
+            <div class="logo-text">GymMonk<span class="logo-accent"></span></div>
+            <p style="color:#6b7280; font-size:0.88rem; margin-top:6px; font-weight:500;">
+                Welcome back — let's get to work.
+            </p>
         </div>
 
         <!-- Login Form -->
-        <form id="loginForm">
-            <!-- User Type Selection -->
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-400 mb-2">Login as:</label>
-                <div class="grid grid-cols-3 gap-2 rounded-lg p-1 bg-gray-700">
+        <form id="loginForm" novalidate>
+
+            <!-- Role Selector -->
+            <div style="margin-bottom: 1.4rem;">
+                <div class="role-tabs">
                     <div>
-                        <input type="radio" name="userType" id="member" value="member" class="sr-only peer" checked>
-                        <label for="member" class="block w-full text-center text-sm font-medium py-2 px-4 rounded-md cursor-pointer peer-checked:bg-indigo-600 peer-checked:text-white transition-all duration-200">Member</label>
+                        <input type="radio" name="userType" id="role-member" value="member" checked>
+                        <label for="role-member">Member</label>
                     </div>
                     <div>
-                        <input type="radio" name="userType" id="employee" value="employee" class="sr-only peer">
-                        <label for="employee" class="block w-full text-center text-sm font-medium py-2 px-4 rounded-md cursor-pointer peer-checked:bg-indigo-600 peer-checked:text-white transition-all duration-200">Employee</label>
+                        <input type="radio" name="userType" id="role-employee" value="employee">
+                        <label for="role-employee">Employee</label>
                     </div>
                     <div>
-                        <input type="radio" name="userType" id="admin" value="admin" class="sr-only peer">
-                        <label for="admin" class="block w-full text-center text-sm font-medium py-2 px-4 rounded-md cursor-pointer peer-checked:bg-indigo-600 peer-checked:text-white transition-all duration-200">Admin</label>
+                        <input type="radio" name="userType" id="role-admin" value="admin">
+                        <label for="role-admin">Admin</label>
                     </div>
                 </div>
             </div>
-            
-            <!-- Email / Username Input -->
-            <div class="mb-4">
-                <label for="identifier" id="identifierLabel" class="block text-sm font-medium text-gray-400 mb-2">Email</label>
-                <input type="text" id="identifier" name="identifier" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" placeholder="you@example.com" required>
+
+            <!-- Identifier (Email / Username) -->
+            <div class="input-group">
+                <label class="input-label" for="identifier" id="identifierLabel">Email</label>
+                <input
+                    type="email"
+                    id="identifier"
+                    name="identifier"
+                    class="input-field"
+                    placeholder="you@example.com"
+                    autocomplete="username"
+                    required
+                >
             </div>
 
-            <!-- Password Input -->
-            <div class="mb-6">
-                <label for="password" class="block text-sm font-medium text-gray-400 mb-2">Password</label>
-                <input type="password" id="password" name="password" class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" placeholder="••••••••" required>
+            <!-- Password -->
+            <div class="input-group">
+                <label class="input-label" for="password">
+                    Password
+                    <a href="forgot-password.html" class="forgot-link">Forgot password?</a>
+                </label>
+                <div class="password-wrapper">
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        class="input-field"
+                        placeholder="••••••••"
+                        autocomplete="current-password"
+                        required
+                    >
+                    <button type="button" class="toggle-password" id="togglePassword" aria-label="Toggle password visibility">
+                        <!-- Eye icon (password hidden) -->
+                        <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        <!-- Eye-off icon (password visible) -->
+                        <svg id="eyeOffIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="display:none;">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                        </svg>
+                    </button>
+                </div>
             </div>
 
-            <!-- Error Message Display -->
-            <div id="errorMessage" class="hidden text-center text-red-400 bg-red-900 bg-opacity-50 p-3 rounded-lg mb-4 text-sm"></div>
+            <!-- Error Message -->
+            <div id="errorMessage" class="error-msg" role="alert"></div>
 
-            <!-- Submit Button -->
-            <div>
-                <button type="submit" class="w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500 transition-all duration-300">
-                    Login
-                </button>
-            </div>
+            <!-- Submit -->
+            <button type="submit" class="btn-login" id="submitBtn">
+                <span id="btnText">Login</span>
+                <div class="spinner" id="btnSpinner"></div>
+            </button>
+
         </form>
 
-        <!-- Sign Up Link -->
-        <div class="text-center mt-6">
-            <p class="text-sm text-gray-400">
-                Don't have an account? 
-                <a href="register.html" class="font-medium text-indigo-400 hover:text-indigo-300">Sign Up</a>
-            </p>
+        <!-- Sign Up link — only shown for members -->
+        <div id="signupSection">
+            <div class="divider">or</div>
+            <div class="signup-link">
+                Don't have an account?
+                <a href="register.html">Sign Up</a>
+            </div>
         </div>
+
     </div>
 
     <script>
-        // --- Configuration ---
-        const API_BASE_URL = 'http://127.0.0.1:5000/api/auth'; // Base URL for your Flask backend
+        // ─── Configuration ────────────────────────────────────────────────────────
+        const API_BASE_URL = 'http://127.0.0.1:5000/api/auth';
 
-        // --- DOM Elements ---
-        const form = document.getElementById('loginForm');
-        const userTypeRadios = document.querySelectorAll('input[name="userType"]');
+        // ─── DOM References ───────────────────────────────────────────────────────
+        const form            = document.getElementById('loginForm');
         const identifierInput = document.getElementById('identifier');
         const identifierLabel = document.getElementById('identifierLabel');
-        const passwordInput = document.getElementById('password');
+        const passwordInput   = document.getElementById('password');
         const errorMessageDiv = document.getElementById('errorMessage');
+        const submitBtn       = document.getElementById('submitBtn');
+        const btnText         = document.getElementById('btnText');
+        const btnSpinner      = document.getElementById('btnSpinner');
+        const togglePassword  = document.getElementById('togglePassword');
+        const eyeIcon         = document.getElementById('eyeIcon');
+        const eyeOffIcon      = document.getElementById('eyeOffIcon');
+        const signupSection   = document.getElementById('signupSection');
+        const userTypeRadios  = document.querySelectorAll('input[name="userType"]');
 
-        // --- Event Listeners ---
-
-        // Update identifier label and placeholder based on user type
+        // ─── Role Switcher ────────────────────────────────────────────────────────
         userTypeRadios.forEach(radio => {
             radio.addEventListener('change', (e) => {
-                const userType = e.target.value;
-                if (userType === 'admin') {
+                const role = e.target.value;
+
+                if (role === 'admin') {
                     identifierLabel.textContent = 'Username';
                     identifierInput.placeholder = 'admin_username';
                     identifierInput.type = 'text';
+                    identifierInput.autocomplete = 'username';
                 } else {
                     identifierLabel.textContent = 'Email';
                     identifierInput.placeholder = 'you@example.com';
                     identifierInput.type = 'email';
+                    identifierInput.autocomplete = 'username';
                 }
+
+                // Show Sign Up link only for Members
+                signupSection.style.display = role === 'member' ? '' : 'none';
+
+                clearErrors();
+                identifierInput.value = '';
+                passwordInput.value = '';
             });
         });
 
-        // Handle form submission
+        // ─── Password Visibility Toggle ───────────────────────────────────────────
+        togglePassword.addEventListener('click', () => {
+            const isHidden = passwordInput.type === 'password';
+            passwordInput.type = isHidden ? 'text' : 'password';
+            eyeIcon.style.display    = isHidden ? 'none'  : '';
+            eyeOffIcon.style.display = isHidden ? ''      : 'none';
+        });
+
+        // ─── Form Submission ──────────────────────────────────────────────────────
         form.addEventListener('submit', async (e) => {
-            e.preventDefault(); // Prevent the default browser refresh
-            hideError();
+            e.preventDefault();
+            clearErrors();
 
-            const userType = document.querySelector('input[name="userType"]:checked').value;
-            const identifier = identifierInput.value;
-            const password = passwordInput.value;
+            const role       = document.querySelector('input[name="userType"]:checked').value;
+            const identifier = identifierInput.value.trim();
+            const password   = passwordInput.value;
 
-            // Determine the correct API endpoint and payload structure
-            const endpoint = `${API_BASE_URL}/login/${userType}`;
-            const isEmailLogin = userType !== 'admin';
-            const payload = {
-                [isEmailLogin ? 'email' : 'username']: identifier,
-                password: password
+            // Basic client-side validation
+            if (!identifier) {
+                showError(role === 'admin' ? 'Please enter your username.' : 'Please enter your email.');
+                identifierInput.classList.add('error');
+                identifierInput.focus();
+                return;
+            }
+            if (!password) {
+                showError('Please enter your password.');
+                passwordInput.classList.add('error');
+                passwordInput.focus();
+                return;
+            }
+
+            const endpoint = `${API_BASE_URL}/login/${role}`;
+            const payload  = {
+                [role !== 'admin' ? 'email' : 'username']: identifier,
+                password
             };
+
+            setLoading(true);
 
             try {
                 const response = await fetch(endpoint, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include', // sends/receives httpOnly cookies
                     body: JSON.stringify(payload),
                 });
 
                 const data = await response.json();
 
                 if (response.ok) {
-                    // Login successful
-                    console.log('Login successful:', data);
-                    // Store the token securely
-                    localStorage.setItem('jwt_token', data.token);
-                    // Redirect to a dashboard page (which we will create next)
+                    // Prefer httpOnly cookie (set by backend).
+                    // Only fall back to sessionStorage if your backend sends a token in the body.
+                    // Avoid localStorage for JWTs — XSS-vulnerable.
+                    if (data.token) {
+                        sessionStorage.setItem('jwt_token', data.token);
+                    }
                     window.location.href = 'dashboard.html';
                 } else {
-                    // Login failed, show error message
-                    showError(data.error || 'An unknown error occurred.');
+                    showError(data.error || 'Invalid credentials. Please try again.');
                 }
-            } catch (error) {
-                console.error('Network or server error:', error);
-                showError('Could not connect to the server. Please make sure it is running.');
+            } catch (err) {
+                console.error('Network error:', err);
+                showError('Cannot reach the server. Please check your connection.');
+            } finally {
+                setLoading(false);
             }
         });
 
-        // --- Helper Functions ---
-        function showError(message) {
-            errorMessageDiv.textContent = message;
-            errorMessageDiv.classList.remove('hidden');
+        // ─── Clear field error highlight on input ─────────────────────────────────
+        [identifierInput, passwordInput].forEach(input => {
+            input.addEventListener('input', () => input.classList.remove('error'));
+        });
+
+        // ─── Helpers ──────────────────────────────────────────────────────────────
+        function showError(msg) {
+            errorMessageDiv.textContent = msg;
+            errorMessageDiv.style.display = 'block';
+            // Re-trigger shake animation
+            errorMessageDiv.style.animation = 'none';
+            void errorMessageDiv.offsetHeight; // reflow
+            errorMessageDiv.style.animation = '';
         }
 
-        function hideError() {
-            errorMessageDiv.classList.add('hidden');
+        function clearErrors() {
+            errorMessageDiv.style.display = 'none';
+            identifierInput.classList.remove('error');
+            passwordInput.classList.remove('error');
+        }
+
+        function setLoading(isLoading) {
+            submitBtn.disabled     = isLoading;
+            btnText.style.display  = isLoading ? 'none'  : '';
+            btnSpinner.style.display = isLoading ? 'block' : 'none';
         }
     </script>
+
 </body>
 </html>

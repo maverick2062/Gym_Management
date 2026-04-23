@@ -24,7 +24,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'a_default_fallback_secret_key')
 
 # Enable CORS (Cross-Origin Resource Sharing)
-CORS(app)
+CORS(app,supports_credentials=True, origins=["http://127.0.0.1:5500"])
 
 # A simple test route to make sure the server is running
 @app.route('/api/ping', methods=['GET'])
