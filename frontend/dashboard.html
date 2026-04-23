@@ -4,431 +4,932 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GymMonk - Dashboard</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome for icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        * { box-sizing: border-box; }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #111827; /* A dark gray background */
+            font-family: 'Barlow', sans-serif;
+            background-color: #0f1117;
+            color: #e2e8f0;
         }
+
+        /* ── Sidebar ── */
         .sidebar {
-            transition: transform 0.3s ease-in-out;
+            background: #13151f;
+            border-right: 1px solid rgba(99,102,241,0.15);
+            width: 240px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
         }
-        .modal {
-            transition: opacity 0.3s ease;
+
+        .logo-text {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 1.7rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            background: linear-gradient(135deg, #fff 40%, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .logo-dot {
+            display: inline-block;
+            width: 7px; height: 7px;
+            background: #6366f1;
+            border-radius: 50%;
+            margin-left: 2px;
+            vertical-align: super;
+            box-shadow: 0 0 6px #6366f1;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 20px;
+            color: #6b7280;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-left: 3px solid transparent;
+            transition: all 0.18s ease;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .nav-link:hover {
+            color: #e2e8f0;
+            background: rgba(99,102,241,0.07);
+            border-left-color: rgba(99,102,241,0.4);
+        }
+        .nav-link.active {
+            color: #a5b4fc;
+            background: rgba(99,102,241,0.12);
+            border-left-color: #6366f1;
+        }
+        .nav-link i { width: 18px; text-align: center; }
+
+        /* ── Header ── */
+        .top-header {
+            background: #13151f;
+            border-bottom: 1px solid rgba(99,102,241,0.12);
+            padding: 14px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .page-title {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            color: #f1f5f9;
+        }
+
+        /* ── Content area ── */
+        .content-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        /* ── Cards ── */
+        .card {
+            background: rgba(20,22,32,0.9);
+            border: 1px solid rgba(99,102,241,0.12);
+            border-radius: 14px;
+            padding: 24px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+        }
+
+        .section-title {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            color: #f1f5f9;
+        }
+
+        /* ── Table ── */
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+        .data-table th {
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #6b7280;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .data-table td {
+            padding: 11px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            color: #cbd5e1;
+            vertical-align: middle;
+        }
+        .data-table tr:last-child td { border-bottom: none; }
+        .data-table tbody tr:hover { background: rgba(99,102,241,0.05); }
+
+        /* ── Badges ── */
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+        .badge-active  { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
+        .badge-inactive{ background: rgba(239,68,68,0.12);  color: #f87171; border: 1px solid rgba(239,68,68,0.25); }
+
+        /* ── Buttons ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-family: 'Barlow', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.18s ease;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5, #6366f1);
+            color: #fff;
+            box-shadow: 0 2px 12px rgba(79,70,229,0.3);
+        }
+        .btn-primary:hover { background: linear-gradient(135deg,#4338ca,#4f46e5); box-shadow: 0 4px 16px rgba(79,70,229,0.45); transform: translateY(-1px); }
+        .btn-danger  { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+        .btn-danger:hover  { background: rgba(239,68,68,0.25); }
+        .btn-ghost   { background: rgba(255,255,255,0.05); color: #9ca3af; border: 1px solid rgba(255,255,255,0.08); }
+        .btn-ghost:hover   { background: rgba(255,255,255,0.09); color: #e2e8f0; }
+
+        /* ── Modal ── */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 50;
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+        }
+        .modal-overlay.open { opacity: 1; visibility: visible; }
+        .modal-box {
+            background: #13151f;
+            border: 1px solid rgba(99,102,241,0.2);
+            border-radius: 16px;
+            padding: 28px;
+            width: 100%; max-width: 440px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            transform: translateY(20px);
+            transition: transform 0.25s ease;
+        }
+        .modal-overlay.open .modal-box { transform: translateY(0); }
+
+        .modal-title {
+            font-family: 'Barlow Condensed', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 20px;
+        }
+
+        /* ── Form inputs inside modal ── */
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 8px;
+            color: #f1f5f9;
+            font-family: 'Barlow', sans-serif;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-input::placeholder { color: #4b5563; }
+        .form-input:focus {
+            border-color: rgba(99,102,241,0.55);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+        }
+
+        /* ── Loading skeleton ── */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+            border-radius: 6px;
+            height: 14px;
+        }
+        @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+        /* ── Logout button ── */
+        #logout-button {
+            background: rgba(239,68,68,0.12);
+            color: #f87171;
+            border: 1px solid rgba(239,68,68,0.25);
+            padding: 7px 16px;
+            border-radius: 8px;
+            font-family: 'Barlow', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.18s;
+        }
+        #logout-button:hover { background: rgba(239,68,68,0.22); }
+
+        /* ── Welcome banner ── */
+        .welcome-banner {
+            background: linear-gradient(135deg, rgba(79,70,229,0.15), rgba(99,102,241,0.05));
+            border: 1px solid rgba(99,102,241,0.2);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .welcome-icon {
+            width: 44px; height: 44px;
+            background: rgba(99,102,241,0.2);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem;
+            color: #818cf8;
+            flex-shrink: 0;
+        }
+
+        /* ── Toast notification ── */
+        #toast {
+            position: fixed;
+            bottom: 24px; right: 24px;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            z-index: 100;
+            transform: translateY(16px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+        #toast.show { transform: translateY(0); opacity: 1; }
+        #toast.success { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
+        #toast.error   { background: rgba(239,68,68,0.15);  color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.25); border-radius: 10px; }
+
+        /* Dark-themed native select options */
+        .form-input option {
+            background: #1e2030;
+            color: #f1f5f9;
         }
     </style>
 </head>
-<body class="text-gray-200">
+<body>
 
-    <!-- Main Container -->
-    <div class="flex h-screen bg-gray-900">
-        <!-- Sidebar -->
-        <aside class="w-64 bg-gray-800 text-white flex-shrink-0 sidebar">
-            <div class="p-6 text-2xl font-bold border-b border-gray-700">
-                GymMonk
-            </div>
-            <nav class="mt-6">
-                <!-- Navigation links will be populated by JavaScript -->
-                <div id="nav-links"></div>
-            </nav>
-        </aside>
+<!-- ─── Layout ─────────────────────────────────────────────── -->
+<div style="display:flex; height:100vh; overflow:hidden;">
 
-        <!-- Main Content -->
-        <main class="flex-1 flex flex-col overflow-hidden">
-            <!-- Header -->
-            <header class="flex justify-between items-center p-4 bg-gray-800 border-b border-gray-700">
-                <h1 class="text-xl font-semibold">Dashboard</h1>
-                <div class="flex items-center">
-                    <div class="mr-4 text-right">
-                        <p id="user-name" class="font-semibold text-white"></p>
-                        <p id="user-role" class="text-sm text-gray-400"></p>
-                    </div>
-                    <button id="logout-button" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition">
-                        Logout
-                    </button>
-                </div>
-            </header>
-
-            <!-- Page Content -->
-            <div class="flex-1 p-6 overflow-y-auto">
-                <!-- Welcome Message -->
-                <div id="welcome-message" class="mb-6 p-4 bg-gray-800 rounded-lg">
-                    Welcome to your dashboard! Select an option from the sidebar to get started.
-                </div>
-                
-                <!-- Dynamic Content Area -->
-                <div id="content-area">
-                    <!-- Content will be loaded here by JavaScript -->
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- Add/Edit Modal -->
-    <div id="form-modal" class="modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden opacity-0">
-        <div class="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md">
-            <h2 id="modal-title" class="text-2xl font-bold mb-6 text-white"></h2>
-            <form id="modal-form">
-                <!-- Form fields will be dynamically inserted here -->
-                <div id="form-fields"></div>
-                <div class="mt-8 flex justify-end space-x-4">
-                    <button type="button" id="cancel-button" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg font-semibold">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-semibold">Save</button>
-                </div>
-            </form>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div style="padding: 20px; border-bottom: 1px solid rgba(99,102,241,0.12);">
+            <div class="logo-text">GymMonk<span class="logo-dot"></span></div>
         </div>
+
+        <nav style="margin-top: 16px; flex:1;" id="nav-links"></nav>
+
+        <!-- Sidebar footer: user info -->
+        <div style="padding: 16px 20px; border-top: 1px solid rgba(99,102,241,0.12);">
+            <p id="sidebar-name" style="font-weight:600; font-size:0.9rem; color:#f1f5f9;"></p>
+            <p id="sidebar-role" style="font-size:0.75rem; color:#6b7280; margin-top:2px;"></p>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <main style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+
+        <!-- Header -->
+        <header class="top-header">
+            <span class="page-title" id="page-title">Dashboard</span>
+            <button id="logout-button"><i class="fas fa-sign-out-alt" style="margin-right:6px;"></i>Logout</button>
+        </header>
+
+        <!-- Scrollable content -->
+        <div class="content-scroll" id="content-area">
+            <!-- populated by JS -->
+        </div>
+
+    </main>
+</div>
+
+<!-- ─── Modal ──────────────────────────────────────────────── -->
+<div id="form-modal" class="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal-box">
+        <h2 class="modal-title" id="modal-title"></h2>
+        <form id="modal-form" novalidate>
+            <div id="form-fields"></div>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+                <button type="button" id="cancel-button" class="btn btn-ghost">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="save-btn">
+                    <span id="save-btn-text">Save</span>
+                    <span id="save-spinner" style="display:none;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </span>
+                </button>
+            </div>
+        </form>
     </div>
+</div>
 
-    <script>
-        // --- Configuration ---
-        const API_BASE_URL = 'http://127.0.0.1:5000/api';
+<!-- ─── Toast ─────────────────────────────────────────────── -->
+<div id="toast"></div>
 
-        // --- Global State ---
-        let currentUserData = null;
+<!-- ─────────────────────────────────────────────────────────────────── -->
+<script>
+// ══════════════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════════════
+const API_BASE_URL = 'http://127.0.0.1:5000/api';
 
-        // --- DOM Elements ---
-        const userNameDisplay = document.getElementById('user-name');
-        const userRoleDisplay = document.getElementById('user-role');
-        const logoutButton = document.getElementById('logout-button');
-        const navLinksContainer = document.getElementById('nav-links');
-        const contentArea = document.getElementById('content-area');
-        const formModal = document.getElementById('form-modal');
-        const modalTitle = document.getElementById('modal-title');
-        const modalForm = document.getElementById('modal-form');
-        const formFields = document.getElementById('form-fields');
-        const cancelButton = document.getElementById('cancel-button');
+// ══════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════
+let currentUser   = null;
+let activeNavItem = null;
 
-        // --- JWT and Authentication ---
-        
-        function decodeToken(token) {
-            try {
-                const base64Url = token.split('.')[1];
-                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                }).join(''));
-                return JSON.parse(jsonPayload);
-            } catch (e) {
-                console.error("Failed to decode token:", e);
-                return null;
-            }
-        }
+// ══════════════════════════════════════════════════════════
+// DOM REFS
+// ══════════════════════════════════════════════════════════
+const contentArea    = document.getElementById('content-area');
+const navLinksEl     = document.getElementById('nav-links');
+const formModal      = document.getElementById('form-modal');
+const modalTitle     = document.getElementById('modal-title');
+const modalForm      = document.getElementById('modal-form');
+const formFields     = document.getElementById('form-fields');
+const cancelButton   = document.getElementById('cancel-button');
+const saveBtnText    = document.getElementById('save-btn-text');
+const saveSpinner    = document.getElementById('save-spinner');
+const pageTitle      = document.getElementById('page-title');
+const toastEl        = document.getElementById('toast');
 
-        function initializeDashboard() {
-            const token = localStorage.getItem('jwt_token');
-            if (!token) {
-                window.location.href = 'index.html';
-                return;
-            }
-            const userData = decodeToken(token);
-            if (!userData || userData.exp * 1000 < Date.now()) {
-                localStorage.removeItem('jwt_token');
-                window.location.href = 'index.html';
-                return;
-            }
-            currentUserData = userData; // Store user data globally
-            setupUI(currentUserData);
-        }
+// ══════════════════════════════════════════════════════════
+// AUTH — sessionStorage (matches index.html)
+// ══════════════════════════════════════════════════════════
+function getToken() {
+    return sessionStorage.getItem('jwt_token');
+}
 
-        // --- UI Setup ---
+function decodeToken(token) {
+    try {
+        const payload = token.split('.')[1];
+        const json = decodeURIComponent(
+            atob(payload.replace(/-/g, '+').replace(/_/g, '/'))
+                .split('')
+                .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                .join('')
+        );
+        return JSON.parse(json);
+    } catch {
+        return null;
+    }
+}
 
-        function setupUI(userData) {
-            userNameDisplay.textContent = userData.name || userData.username || userData.email;
-            userRoleDisplay.textContent = userData.role.charAt(0).toUpperCase() + userData.role.slice(1);
-            
-            const roles = {
-                member: [
-                    { name: 'My Profile', icon: 'fa-user' },
-                    { name: 'Workout Plan', icon: 'fa-dumbbell' }
-                ],
-                Trainer: [
-                    { name: 'Members', icon: 'fa-users' },
-                    { name: 'Equipment', icon: 'fa-cogs' }
-                ],
-                IT: [
-                    { name: 'Members', icon: 'fa-users' },
-                    { name: 'Equipment', icon: 'fa-cogs' }
-                ],
-                admin: [
-                    { name: 'Members', icon: 'fa-users' },
-                    { name: 'Employees', icon: 'fa-user-tie' },
-                    { name: 'Equipment', icon: 'fa-cogs' }
-                ]
-            };
-            
-            const navLinks = roles[userData.role] || [];
-            navLinksContainer.innerHTML = navLinks.map(link => `
-                <a href="#" class="flex items-center px-6 py-3 text-gray-300 hover:bg-gray-700 hover:text-white transition" data-action="${link.name.toLowerCase().replace(' ', '-')}">
-                    <i class="fas ${link.icon} w-6"></i>
-                    <span class="mx-4">${link.name}</span>
-                </a>
-            `).join('');
-            
-            document.querySelectorAll('#nav-links a').forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const action = e.currentTarget.dataset.action;
-                    if (action === 'members') loadMembersView();
-                    else if (action === 'employees') loadEmployeesView();
-                    else if (action === 'equipment') loadEquipmentView();
-                    else contentArea.innerHTML = `<div class="bg-gray-800 p-4 rounded-lg">Content for ${action.replace('-', ' ')} coming soon!</div>`;
-                });
-            });
-        }
+function logout() {
+    sessionStorage.removeItem('jwt_token');
+    window.location.href = 'index.html';
+}
 
-        // --- API Calls and Content Loading ---
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+function initializeDashboard() {
+    const token = getToken();
+    if (!token) { window.location.href = 'index.html'; return; }
 
-        async function fetchFromAPI(endpoint, method = 'GET', body = null) {
-            const token = localStorage.getItem('jwt_token');
-            const options = {
-                method: method,
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            };
-            if (body) {
-                options.body = JSON.stringify(body);
-            }
-            const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
-            if (response.status === 401) {
-                localStorage.removeItem('jwt_token');
-                window.location.href = 'index.html';
-            }
-             const contentType = response.headers.get("content-type");
-            if (contentType && contentType.indexOf("application/json") !== -1) {
-                return response.json();
-            } else {
-                return null; 
-            }
-        }
-        
-        // --- NEW HELPER FUNCTIONS for Date Formatting ---
+    const userData = decodeToken(token);
+    if (!userData || userData.exp * 1000 < Date.now()) {
+        logout();
+        return;
+    }
 
-        function formatDateWithOrdinal(date) {
-            const d = date.getDate();
-            const nth = (d > 3 && d < 21) ? 'th' : ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th'][d % 10];
-            const month = date.toLocaleString('default', { month: 'short' });
-            const year = date.getFullYear();
-            return `${d}${nth} ${month} ${year}`;
-        }
+    currentUser = userData;
+    setupUI(userData);
+}
 
-        function calculateMembershipDuration(joinDateStr, plan) {
-            if (!joinDateStr || !plan) return 'N/A';
+// ══════════════════════════════════════════════════════════
+// UI SETUP
+// ══════════════════════════════════════════════════════════
+const NAV_CONFIG = {
+    member: [
+        { label: 'My Profile',   icon: 'fa-user',     action: 'profile' },
+        { label: 'Workout Plan', icon: 'fa-dumbbell', action: 'workout' }
+    ],
+    Trainer: [
+        { label: 'Members',   icon: 'fa-users', action: 'members' },
+        { label: 'Equipment', icon: 'fa-cogs',  action: 'equipment' }
+    ],
+    IT: [
+        { label: 'Members',   icon: 'fa-users', action: 'members' },
+        { label: 'Equipment', icon: 'fa-cogs',  action: 'equipment' }
+    ],
+    admin: [
+        { label: 'Members',   icon: 'fa-users',    action: 'members' },
+        { label: 'Employees', icon: 'fa-user-tie', action: 'employees' },
+        { label: 'Equipment', icon: 'fa-cogs',     action: 'equipment' }
+    ]
+};
 
-            const startDate = new Date(joinDateStr);
-            // Adjust for timezone offset to prevent date from shifting
-            startDate.setMinutes(startDate.getMinutes() + startDate.getTimezoneOffset());
+function setupUI(userData) {
+    // Sidebar footer
+    document.getElementById('sidebar-name').textContent =
+        userData.name || userData.username || 'User';
+    document.getElementById('sidebar-role').textContent =
+        userData.role.charAt(0).toUpperCase() + userData.role.slice(1);
 
-            const endDate = new Date(startDate);
+    // Build nav
+    const links = NAV_CONFIG[userData.role] || [];
+    navLinksEl.innerHTML = links.map(link => `
+        <a href="#"
+           class="nav-link"
+           data-action="${link.action}"
+           aria-label="${link.label}">
+            <i class="fas ${link.icon}"></i>
+            <span>${link.label}</span>
+        </a>
+    `).join('');
 
-            const planType = plan.toLowerCase();
-            if (planType.includes('monthly')) {
-                endDate.setMonth(endDate.getMonth() + 1);
-            } else if (planType.includes('quarterly')) {
-                endDate.setMonth(endDate.getMonth() + 3);
-            } else if (planType.includes('yearly')) {
-                endDate.setFullYear(endDate.getFullYear() + 1);
-            } else {
-                // If plan is not recognized, just show the start date
-                return `Starts ${formatDateWithOrdinal(startDate)}`;
-            }
-
-            return `${formatDateWithOrdinal(startDate)} - ${formatDateWithOrdinal(endDate)}`;
-        }
-
-
-        async function loadMembersView() {
-            try {
-                const members = await fetchFromAPI('/members/');
-                 if (!members) {
-                    throw new Error("No data received from server");
-                }
-                
-                const canAddMembers = currentUserData && ['admin', 'IT'].includes(currentUserData.role);
-                const addButtonHtml = canAddMembers ? `<button onclick="showCreateModal('member')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition">+ Add New</button>` : '';
-
-                // --- UPDATED TABLE STRUCTURE ---
-                let content = `
-                    <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-                        <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-2xl font-bold">Member Management</h2>
-                            ${addButtonHtml}
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-sm">
-                                <thead>
-                                    <tr class="border-b border-gray-700">
-                                        <th class="p-2">Name</th>
-                                        <th class="p-2">Email</th>
-                                        <th class="p-2">Phone</th>
-                                        <th class="p-2">Plan</th>
-                                        <th class="p-2">Duration</th>
-                                        <th class="p-2">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>`;
-                members.forEach(member => {
-                    const duration = calculateMembershipDuration(member.join_date, member.membership_plan);
-                    content += `
-                        <tr class="border-b border-gray-700 hover:bg-gray-700">
-                            <td class="p-2">${member.name}</td>
-                            <td class="p-2">${member.email}</td>
-                            <td class="p-2">${member.phone_number || 'N/A'}</td>
-                            <td class="p-2">${member.membership_plan || 'N/A'}</td>
-                            <td class="p-2">${duration}</td>
-                            <td class="p-2"><span class="px-2 py-1 text-xs font-semibold rounded-full ${member.status === 'active' ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'}">${member.status}</span></td>
-                        </tr>`;
-                });
-                content += `</tbody></table></div></div>`;
-                contentArea.innerHTML = content;
-            } catch (error) {
-                contentArea.innerHTML = `<div class="text-red-400">Failed to load members.</div>`;
-                console.error("Error loading members:", error);
-            }
-        }
-
-        async function loadEmployeesView() {
-            try {
-                const employees = await fetchFromAPI('/employees/');
-                 if (!employees) {
-                    throw new Error("No data received from server");
-                }
-                let content = `
-                    <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-                         <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-2xl font-bold">Employee Management</h2>
-                            <button onclick="showCreateModal('employee')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition">+ Add New</button>
-                        </div>
-                        <table class="w-full text-left">
-                            <thead><tr class="border-b border-gray-700"><th class="p-2">ID</th><th class="p-2">Name</th><th class="p-2">Email</th><th class="p-2">Role</th></tr></thead>
-                            <tbody>`;
-                employees.forEach(employee => {
-                    content += `<tr class="border-b border-gray-700 hover:bg-gray-700"><td class="p-2">${employee.user_id}</td><td class="p-2">${employee.name}</td><td class="p-2">${employee.email}</td><td class="p-2">${employee.role}</td></tr>`;
-                });
-                content += `</tbody></table></div>`;
-                contentArea.innerHTML = content;
-            } catch (error) {
-                contentArea.innerHTML = `<div class="text-red-400">Failed to load employees.</div>`;
-                console.error("Error loading employees:", error);
-            }
-        }
-
-        async function loadEquipmentView() {
-            try {
-                const equipment = await fetchFromAPI('/equipment/');
-                if (!equipment) {
-                    throw new Error("No data received from server");
-                }
-                let content = `
-                    <div class="bg-gray-800 p-6 rounded-lg shadow-lg">
-                        <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-2xl font-bold">Equipment Management</h2>
-                            <button onclick="showCreateModal('equipment')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition">+ Add New</button>
-                        </div>
-                        <table class="w-full text-left">
-                            <thead><tr class="border-b border-gray-700"><th class="p-2">Code</th><th class="p-2">Name</th><th class="p-2">Quantity</th><th class="p-2">Price</th><th class="p-2">Category</th></tr></thead>
-                            <tbody>`;
-                equipment.forEach(item => {
-                    content += `<tr class="border-b border-gray-700 hover:bg-gray-700"><td class="p-2">${item.e_code}</td><td class="p-2">${item.e_name}</td><td class="p-2">${item.e_qty}</td><td class="p-2">$${item.e_unit_price}</td><td class="p-2">${item.e_category}</td></tr>`;
-                });
-                content += `</tbody></table></div>`;
-                contentArea.innerHTML = content;
-            } catch (error) {
-                contentArea.innerHTML = `<div class="text-red-400">Failed to load equipment.</div>`;
-                console.error("Error loading equipment:", error);
-            }
-        }
-
-        // --- Modal and Form Handling ---
-        
-        function showCreateModal(type) {
-            modalForm.reset();
-            modalForm.dataset.type = type;
-            let fieldsHtml = '';
-            
-            if (type === 'member') {
-                modalTitle.textContent = 'Add New Member';
-                fieldsHtml = `
-                    <input type="text" name="name" placeholder="Full Name" class="w-full p-2 mb-4 bg-gray-700 rounded" required>
-                    <input type="email" name="email" placeholder="Email Address" class="w-full p-2 mb-4 bg-gray-700 rounded" required>
-                    <input type="password" name="password" placeholder="Password" class="w-full p-2 mb-4 bg-gray-700 rounded" required>
-                    <input type="text" name="phone_number" placeholder="Phone Number" class="w-full p-2 mb-4 bg-gray-700 rounded">
-                    <input type="text" name="membership_plan" placeholder="Membership Plan (e.g., Monthly)" class="w-full p-2 bg-gray-700 rounded" required>
-                `;
-            } else if (type === 'employee') {
-                modalTitle.textContent = 'Add New Employee';
-                 fieldsHtml = `
-                    <input type="text" name="name" placeholder="Full Name" class="w-full p-2 mb-4 bg-gray-700 rounded" required>
-                    <input type="email" name="email" placeholder="Email Address" class="w-full p-2 mb-4 bg-gray-700 rounded" required>
-                    <input type="password" name="password" placeholder="Password" class="w-full p-2 mb-4 bg-gray-700 rounded" required>
-                    <select name="role" class="w-full p-2 mb-4 bg-gray-700 rounded" required><option value="Trainer">Trainer</option><option value="IT">IT</option></select>
-                    <input type="number" name="salary" placeholder="Salary" class="w-full p-2 bg-gray-700 rounded">
-                `;
-            } else if (type === 'equipment') {
-                modalTitle.textContent = 'Add New Equipment';
-                 fieldsHtml = `
-                    <input type="text" name="e_name" placeholder="Equipment Name" class="w-full p-2 mb-4 bg-gray-700 rounded" required>
-                    <input type="number" name="e_qty" placeholder="Quantity" class="w-full p-2 mb-4 bg-gray-700 rounded" required>
-                    <input type="number" name="e_unit_price" placeholder="Unit Price" class="w-full p-2 mb-4 bg-gray-700 rounded" required>
-                    <input type="text" name="e_category" placeholder="Category" class="w-full p-2 bg-gray-700 rounded" required>
-                `;
-            }
-
-            formFields.innerHTML = fieldsHtml;
-            formModal.classList.remove('hidden');
-            setTimeout(() => formModal.classList.remove('opacity-0'), 10);
-        }
-
-        function hideModal() {
-            formModal.classList.add('opacity-0');
-            setTimeout(() => formModal.classList.add('hidden'), 300);
-        }
-
-        async function handleFormSubmit(e) {
+    navLinksEl.querySelectorAll('.nav-link').forEach(el => {
+        el.addEventListener('click', e => {
             e.preventDefault();
-            const type = modalForm.dataset.type;
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData.entries());
-
-            let endpoint = '';
-            // UPDATED: Use the correct endpoint for adding a member from the dashboard
-            if (type === 'member') endpoint = '/members/add'; 
-            else if (type === 'employee') endpoint = '/employees/add';
-            else if (type === 'equipment') endpoint = '/equipment/add';
-
-            try {
-                const result = await fetchFromAPI(endpoint, 'POST', data);
-                if (result && result.message) {
-                    hideModal();
-                    // Refresh the corresponding view
-                    if (type === 'member') loadMembersView();
-                    else if (type === 'employee') loadEmployeesView();
-                    else if (type === 'equipment') loadEquipmentView();
-                } else {
-                    alert('Error: ' + (result ? result.error : 'Unknown error'));
-                }
-            } catch (error) {
-                console.error(`Failed to create ${type}:`, error);
-                alert(`An error occurred while creating the ${type}.`);
-            }
-        }
-
-        // --- Event Listeners ---
-        logoutButton.addEventListener('click', () => {
-            localStorage.removeItem('jwt_token');
-            window.location.href = 'index.html';
+            setActiveNav(el);
+            handleNavAction(el.dataset.action);
         });
-        cancelButton.addEventListener('click', hideModal);
-        modalForm.addEventListener('submit', handleFormSubmit);
+    });
 
-        // --- Initialization ---
-        document.addEventListener('DOMContentLoaded', initializeDashboard);
-    </script>
+    // Show welcome
+    renderWelcome(userData);
+}
+
+function setActiveNav(el) {
+    navLinksEl.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    el.classList.add('active');
+    pageTitle.textContent = el.querySelector('span').textContent;
+}
+
+function renderWelcome(userData) {
+    const name = userData.name || userData.username || 'there';
+    contentArea.innerHTML = `
+        <div class="welcome-banner">
+            <div class="welcome-icon"><i class="fas fa-dumbbell"></i></div>
+            <div>
+                <p style="font-weight:700; font-size:1.05rem; color:#f1f5f9;">Welcome back, ${name}!</p>
+                <p style="font-size:0.85rem; color:#6b7280; margin-top:2px;">
+                    Select an option from the sidebar to get started.
+                </p>
+            </div>
+        </div>
+    `;
+}
+
+function handleNavAction(action) {
+    const handlers = {
+        members:   loadMembersView,
+        employees: loadEmployeesView,
+        equipment: loadEquipmentView,
+        profile:   loadProfileView,
+        workout:   loadWorkoutView
+    };
+    (handlers[action] || (() => {
+        contentArea.innerHTML = `
+            <div class="card" style="text-align:center; color:#6b7280; padding:40px;">
+                <i class="fas fa-tools" style="font-size:2rem; margin-bottom:12px; display:block;"></i>
+                <p>This section is coming soon.</p>
+            </div>`;
+    }))();
+}
+
+// ══════════════════════════════════════════════════════════
+// API HELPER
+// ══════════════════════════════════════════════════════════
+async function fetchFromAPI(endpoint, method = 'GET', body = null) {
+    const token = getToken();
+    const options = {
+        method,
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+    };
+    if (body) options.body = JSON.stringify(body);
+
+    try {
+        const res = await fetch(`${API_BASE_URL}${endpoint}`, options);
+
+        if (res.status === 401) { logout(); return null; }
+
+        const ct = res.headers.get('content-type') || '';
+        if (!ct.includes('application/json')) return null;
+
+        const data = await res.json();
+        return { ok: res.ok, status: res.status, data };
+    } catch (err) {
+        console.error('API error:', err);
+        return null;
+    }
+}
+
+// ══════════════════════════════════════════════════════════
+// DATE HELPERS
+// ══════════════════════════════════════════════════════════
+function ordinalDate(date) {
+    const d = date.getDate();
+    const sfx = (d > 3 && d < 21) ? 'th'
+        : ['th','st','nd','rd','th','th','th','th','th','th'][d % 10];
+    return `${d}${sfx} ${date.toLocaleString('default',{month:'short'})} ${date.getFullYear()}`;
+}
+
+function membershipRange(joinDateStr, plan) {
+    if (!joinDateStr || !plan) return 'N/A';
+    const start = new Date(joinDateStr);
+    start.setMinutes(start.getMinutes() + start.getTimezoneOffset()); // fix tz shift
+    const end = new Date(start);
+    const p = plan.toLowerCase();
+    if      (p.includes('monthly'))   end.setMonth(end.getMonth() + 1);
+    else if (p.includes('quarterly')) end.setMonth(end.getMonth() + 3);
+    else if (p.includes('yearly'))    end.setFullYear(end.getFullYear() + 1);
+    else return `Starts ${ordinalDate(start)}`;
+    return `${ordinalDate(start)} → ${ordinalDate(end)}`;
+}
+
+// ══════════════════════════════════════════════════════════
+// LOADING SKELETON
+// ══════════════════════════════════════════════════════════
+function renderSkeleton(rows = 5, cols = 4) {
+    const colGroup = Array(cols).fill('<col>').join('');
+    const headerCells = Array(cols).fill('<th class="p-3"><div class="skeleton" style="width:60%;"></div></th>').join('');
+    const rowCells = Array(cols).fill('<td class="p-3"><div class="skeleton"></div></td>').join('');
+    const bodyRows = Array(rows).fill(`<tr>${rowCells}</tr>`).join('');
+    contentArea.innerHTML = `
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <div class="skeleton" style="width:180px; height:20px;"></div>
+                <div class="skeleton" style="width:100px; height:34px; border-radius:8px;"></div>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="data-table">
+                    <colgroup>${colGroup}</colgroup>
+                    <thead><tr>${headerCells}</tr></thead>
+                    <tbody>${bodyRows}</tbody>
+                </table>
+            </div>
+        </div>`;
+}
+
+function renderError(msg = 'Failed to load data. Is the server running?') {
+    contentArea.innerHTML = `
+        <div class="card" style="text-align:center; padding:40px;">
+            <i class="fas fa-exclamation-triangle" style="color:#f87171; font-size:2rem; display:block; margin-bottom:12px;"></i>
+            <p style="color:#f87171; font-weight:600;">${msg}</p>
+        </div>`;
+}
+
+// ══════════════════════════════════════════════════════════
+// VIEWS
+// ══════════════════════════════════════════════════════════
+
+// ── Members ──────────────────────────────────────────────
+async function loadMembersView() {
+    renderSkeleton(6, 6);
+    const result = await fetchFromAPI('/members/');
+    if (!result || !result.ok) { renderError('Failed to load members.'); return; }
+
+    const members = result.data;
+    const canAdd  = ['admin', 'IT'].includes(currentUser?.role);
+
+    contentArea.innerHTML = `
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <span class="section-title">Member Management</span>
+                ${canAdd ? `<button class="btn btn-primary" onclick="showCreateModal('member')"><i class="fas fa-plus"></i> Add Member</button>` : ''}
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Plan</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${members.length ? members.map(m => `
+                            <tr>
+                                <td style="font-weight:600; color:#f1f5f9;">${escHtml(m.name)}</td>
+                                <td>${escHtml(m.email)}</td>
+                                <td>${escHtml(m.phone_number || 'N/A')}</td>
+                                <td>${escHtml(m.membership_plan || 'N/A')}</td>
+                                <td style="font-size:0.8rem;">${membershipRange(m.join_date, m.membership_plan)}</td>
+                                <td><span class="badge ${m.status === 'active' ? 'badge-active' : 'badge-inactive'}">${escHtml(m.status)}</span></td>
+                            </tr>`).join('') :
+                            `<tr><td colspan="6" style="text-align:center; color:#6b7280; padding:30px;">No members found.</td></tr>`
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>`;
+}
+
+// ── Employees ─────────────────────────────────────────────
+async function loadEmployeesView() {
+    renderSkeleton(5, 4);
+    const result = await fetchFromAPI('/employees/');
+    if (!result || !result.ok) { renderError('Failed to load employees.'); return; }
+
+    const employees = result.data;
+
+    contentArea.innerHTML = `
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <span class="section-title">Employee Management</span>
+                <button class="btn btn-primary" onclick="showCreateModal('employee')"><i class="fas fa-plus"></i> Add Employee</button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Salary</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${employees.length ? employees.map(e => `
+                            <tr>
+                                <td style="color:#6b7280; font-size:0.8rem;">${escHtml(String(e.user_id))}</td>
+                                <td style="font-weight:600; color:#f1f5f9;">${escHtml(e.name)}</td>
+                                <td>${escHtml(e.email)}</td>
+                                <td><span class="badge" style="background:rgba(99,102,241,0.15); color:#818cf8; border:1px solid rgba(99,102,241,0.3);">${escHtml(e.role)}</span></td>
+                                <td>${e.salary ? '$' + Number(e.salary).toLocaleString() : 'N/A'}</td>
+                            </tr>`).join('') :
+                            `<tr><td colspan="5" style="text-align:center; color:#6b7280; padding:30px;">No employees found.</td></tr>`
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>`;
+}
+
+// ── Equipment ─────────────────────────────────────────────
+async function loadEquipmentView() {
+    renderSkeleton(5, 5);
+    const result = await fetchFromAPI('/equipment/');
+    if (!result || !result.ok) { renderError('Failed to load equipment.'); return; }
+
+    const equipment = result.data;
+
+    contentArea.innerHTML = `
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <span class="section-title">Equipment Management</span>
+                <button class="btn btn-primary" onclick="showCreateModal('equipment')"><i class="fas fa-plus"></i> Add Equipment</button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Qty</th>
+                            <th>Unit Price</th>
+                            <th>Total Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${equipment.length ? equipment.map(item => `
+                            <tr>
+                                <td style="color:#6b7280; font-size:0.8rem; font-family:monospace;">${escHtml(item.e_code)}</td>
+                                <td style="font-weight:600; color:#f1f5f9;">${escHtml(item.e_name)}</td>
+                                <td>${escHtml(item.e_category)}</td>
+                                <td>${escHtml(String(item.e_qty))}</td>
+                                <td>$${Number(item.e_unit_price).toLocaleString()}</td>
+                                <td style="color:#a5b4fc;">$${(item.e_qty * item.e_unit_price).toLocaleString()}</td>
+                            </tr>`).join('') :
+                            `<tr><td colspan="6" style="text-align:center; color:#6b7280; padding:30px;">No equipment found.</td></tr>`
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>`;
+}
+
+// ── Profile (Member) ──────────────────────────────────────
+function loadProfileView() {
+    if (!currentUser) return;
+    contentArea.innerHTML = `
+        <div class="card" style="max-width:480px;">
+            <span class="section-title" style="display:block; margin-bottom:20px;">My Profile</span>
+            <div style="display:flex; flex-direction:column; gap:14px;">
+                ${profileRow('Name',  currentUser.name  || '—')}
+                ${profileRow('Email', currentUser.email || '—')}
+                ${profileRow('Role',  currentUser.role  || '—')}
+            </div>
+        </div>`;
+}
+
+function profileRow(label, value) {
+    return `
+        <div style="display:flex; align-items:center; gap:12px; padding:12px 16px; background:rgba(255,255,255,0.03); border-radius:8px; border:1px solid rgba(255,255,255,0.05);">
+            <span style="font-size:0.72rem; font-weight:700; letter-spacing:0.07em; text-transform:uppercase; color:#6b7280; width:60px; flex-shrink:0;">${label}</span>
+            <span style="color:#f1f5f9; font-weight:500;">${escHtml(value)}</span>
+        </div>`;
+}
+
+// ── Workout placeholder ───────────────────────────────────
+function loadWorkoutView() {
+    contentArea.innerHTML = `
+        <div class="card" style="text-align:center; padding:48px;">
+            <i class="fas fa-dumbbell" style="font-size:2.5rem; color:#6366f1; display:block; margin-bottom:16px;"></i>
+            <p style="font-weight:700; font-size:1.1rem; color:#f1f5f9;">Workout Plans</p>
+            <p style="color:#6b7280; margin-top:6px; font-size:0.9rem;">This feature is coming soon.</p>
+        </div>`;
+}
+
+// ══════════════════════════════════════════════════════════
+// MODAL
+// ══════════════════════════════════════════════════════════
+const MODAL_FIELDS = {
+    member: {
+        title: 'Add New Member',
+        endpoint: '/members/add',
+        fields: [
+            { name: 'name',            type: 'text',     placeholder: 'Full Name',                   required: true },
+            { name: 'email',           type: 'email',    placeholder: 'Email Address',               required: true },
+            { name: 'password',        type: 'password', placeholder: 'Password',                    required: true },
+            { name: 'phone_number',    type: 'tel',      placeholder: 'Phone Number' },
+            { name: 'membership_plan', type: 'select',     options: ['Monthly','Quaterly','Yearly'],   required: true }
+        ]
+    },
+    employee: {
+        title: 'Add New Employee',
+        endpoint: '/employees/add',
+        fields: [
+            { name: 'name',     type: 'text',     placeholder: 'Full Name',     required: true },
+            { name: 'email',    type: 'email',    placeholder: 'Email Address', required: true },
+            { name: 'password', type: 'password', placeholder: 'Password',      required: true },
+            { name: 'role',     type: 'select',   options: ['Trainer', 'IT'],   required: true },
+            { name: 'salary',   type: 'number',   placeholder: 'Salary' }
+        ]
+    },
+    equipment: {
+        title: 'Add New Equipment',
+        endpoint: '/equipment/add',
+        fields: [
+            { name: 'e_name',       type: 'text',   placeholder: 'Equipment Name', required: true },
+            { name: 'e_qty',        type: 'number', placeholder: 'Quantity',        required: true },
+            { name: 'e_unit_price', type: 'number', placeholder: 'Unit Price',      required: true },
+            { name: 'e_category',   type: 'text',   placeholder: 'Category',        required: true }
+        ]
+    }
+};
+
+function showCreateModal(type) {
+    const config = MODAL_FIELDS[type];
+    if (!config) return;
+
+    modalTitle.textContent = config.title;
+    modalForm.dataset.type = type;
+    modalForm.reset();
+
+    formFields.innerHTML = config.fields.map(f => {
+        if (f.type === 'select') {
+            return `<select name="${f.name}" class="form-input" ${f.required ? 'required' : ''}>
+                ${f.options.map(o => `<option value="${o}">${o}</option>`).join('')}
+            </select>`;
+        }
+        return `<input type="${f.type}" name="${f.name}" placeholder="${f.placeholder}"
+                    class="form-input" ${f.required ? 'required' : ''}>`;
+    }).join('');
+
+    openModal();
+}
+
+function openModal() {
+    formModal.classList.add('open');
+    // Focus first input
+    setTimeout(() => formModal.querySelector('input, select')?.focus(), 100);
+}
+
+function closeModal() {
+    formModal.classList.remove('open');
+}
+
+async function handleFormSubmit(e) {
+    e.preventDefault();
+    const type   = modalForm.dataset.type;
+    const config = MODAL_FIELDS[type];
+    if (!config) return;
+
+    const data = Object.fromEntries(new FormData(e.target).entries());
+
+    // Client-side required check
+    for (const f of config.fields) {
+        if (f.required && !data[f.name]?.trim()) {
+            showToast(`${f.placeholder || f.name} is required.`, 'error');
+            return;
+        }
+    }
+
+    setSaveLoading(true);
+    const result = await fetchFromAPI(config.endpoint, 'POST', data);
+    setSaveLoading(false);
+
+    if (result && result.ok) {
+        closeModal();
+        showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} added successfully!`, 'success');
+        // Refresh the current view
+        const refreshMap = { member: loadMembersView, employee: loadEmployeesView, equipment: loadEquipmentView };
+        refreshMap[type]?.();
+    } else {
+        const msg = result?.data?.error || 'Something went wrong. Please try again.';
+        showToast(msg, 'error');
+    }
+}
+
+function setSaveLoading(on) {
+    document.getElementById('save-btn').disabled = on;
+    saveBtnText.style.display  = on ? 'none'  : '';
+    saveSpinner.style.display  = on ? ''      : 'none';
+}
+
+// Close modal on backdrop click
+formModal.addEventListener('click', e => {
+    if (e.target === formModal) closeModal();
+});
+
+// Close modal on Escape key
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && formModal.classList.contains('open')) closeModal();
+});
+
+// ══════════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════════
+let toastTimer;
+function showToast(msg, type = 'success') {
+    toastEl.textContent = msg;
+    toastEl.className = `show ${type}`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { toastEl.className = ''; }, 3500);
+}
+
+// ══════════════════════════════════════════════════════════
+// SECURITY HELPER — prevent XSS when injecting user data
+// ══════════════════════════════════════════════════════════
+function escHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+// ══════════════════════════════════════════════════════════
+// EVENT LISTENERS
+// ══════════════════════════════════════════════════════════
+document.getElementById('logout-button').addEventListener('click', logout);
+cancelButton.addEventListener('click', closeModal);
+modalForm.addEventListener('submit', handleFormSubmit);
+
+// ══════════════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', initializeDashboard);
+</script>
 </body>
 </html>
