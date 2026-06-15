@@ -140,6 +140,75 @@ def setup_database():
                     );
                 ''')
 
+                cursor.execute('''
+                    CREATE TABLE attendance (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        mem_id INT NOT NULL,
+                        check_in DATETIME NOT NULL,
+                        check_out DATETIME,                 
+                        FOREIGN KEY (mem_id) REFERENCES Members(member_ID)
+                    );
+                ''')
+                # check_out -- NULL until they leave
+
+                cursor.execute('''
+                    CREATE TABLE progress_logs (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        mem_id INT NOT NULL,
+                        log_date DATE NOT NULL,
+                        weight_kg DECIMAL(5,2),
+                        body_fat_pct DECIMAL(4,2),
+                        notes TEXT,
+                        logged_by INT,                       
+                        FOREIGN KEY (mem_id) REFERENCES members(member_ID)
+                    );
+                ''')
+                # logged_by -- employee/trainer user_id
+                
+                #Payment/Revenue Logs
+                cursor.execute('''
+                    CREATE TABLE payments (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        mem_id INT NOT NULL,
+                        amount DECIMAL(10,2) NOT NULL,
+                        payment_date DATE NOT NULL,
+                        payment_method VARCHAR(50),
+                        plan_type VARCHAR(50),           
+                        status ENUM('paid','pending','failed') DEFAULT 'paid',
+                        FOREIGN KEY (mem_id) REFERENCES Members(member_ID)
+                    );
+                ''')
+                # plan_type -- Monthly, Quarterly, Yearly
+
+
+                # Member Reviews
+                cursor.execute('''
+                    CREATE TABLE reviews (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        member_id INT NOT NULL,
+                        rating TINYINT CHECK (rating BETWEEN 1 AND 5),
+                        review_text TEXT,
+                        category VARCHAR(50),              
+                        submitted_at DATETIME DEFAULT NOW(),
+                        FOREIGN KEY (member_id) REFERENCES members(id)
+                    );
+                ''')
+                # category -- Equipment, Trainer, Cleanliness etc.
+                
+                #Equipment Usage
+                cursor.execute('''
+                    CREATE TABLE equipment_usage (
+                        id              INT AUTO_INCREMENT PRIMARY KEY,
+                        equipment_id    INT NOT NULL,
+                        used_by         INT,                  
+                        used_at         DATETIME DEFAULT NOW(),
+                        duration_mins   INT,
+                        FOREIGN KEY (equipment_id) REFERENCES equipment(id)
+                    );
+                ''')
+                # used_by -- member_id, nullable
+                
+
                 conn.commit()
                 # Updated logging message to be more accurate
                 logging.info("All tables for GymMonk have been checked/created successfully.")
