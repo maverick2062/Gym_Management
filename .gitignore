@@ -18,3 +18,5 @@ venv/
 .features.txt
 .ideas.txt
 .learnings.txt
+#Kaggle dataset
+.gym_traffic_data.csv
