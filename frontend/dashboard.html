@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GymMonk - Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
@@ -451,6 +452,7 @@ const NAV_CONFIG = {
         { label: 'Equipment', icon: 'fa-cogs',  action: 'equipment' }
     ],
     admin: [
+        { label: 'Analytics',  icon: 'fa-chart-line', action: 'analytics' },
         { label: 'Members',   icon: 'fa-users',    action: 'members' },
         { label: 'Employees', icon: 'fa-user-tie', action: 'employees' },
         { label: 'Equipment', icon: 'fa-cogs',     action: 'equipment' }
@@ -515,7 +517,8 @@ function handleNavAction(action) {
         employees: loadEmployeesView,
         equipment: loadEquipmentView,
         profile:   loadProfileView,
-        workout:   loadWorkoutView
+        workout:   loadWorkoutView,
+        analytics: loadAnalyticsView
     };
     (handlers[action] || (() => {
         contentArea.innerHTML = `
@@ -736,8 +739,8 @@ async function loadEquipmentView() {
                                 <td style="font-weight:600; color:#f1f5f9;">${escHtml(item.e_name)}</td>
                                 <td>${escHtml(item.e_category)}</td>
                                 <td>${escHtml(String(item.e_qty))}</td>
-                                <td>$${Number(item.e_unit_price).toLocaleString()}</td>
-                                <td style="color:#a5b4fc;">$${(item.e_qty * item.e_unit_price).toLocaleString()}</td>
+                                <td>₹${Number(item.e_unit_price).toLocaleString()}</td>
+                                <td style="color:#a5b4fc;">₹${(item.e_qty * item.e_unit_price).toLocaleString()}</td>
                             </tr>`).join('') :
                             `<tr><td colspan="6" style="text-align:center; color:#6b7280; padding:30px;">No equipment found.</td></tr>`
                         }
@@ -747,6 +750,151 @@ async function loadEquipmentView() {
         </div>`;
 }
 
+async function loadAnalyticsView() {
+    // Show loading state first
+    contentArea.innerHTML = `
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+            <div class="card" style="min-height:280px;">
+                <div class="skeleton" style="width:140px; height:16px; margin-bottom:20px;"></div>
+                <div class="skeleton" style="height:220px;"></div>
+            </div>
+            <div class="card" style="min-height:280px;">
+                <div class="skeleton" style="width:140px; height:16px; margin-bottom:20px;"></div>
+                <div class="skeleton" style="height:220px;"></div>
+            </div>
+            <div class="card" style="grid-column:1/-1; min-height:200px;">
+                <div class="skeleton" style="width:140px; height:16px; margin-bottom:20px;"></div>
+                <div class="skeleton" style="height:150px;"></div>
+            </div>
+        </div>`;
+
+    // Fetch all 3 — now all are actually used
+    const [growthRes, planRes, heatmapRes] = await Promise.all([
+        fetchFromAPI('/analytics/growth/members'),
+        fetchFromAPI('/analytics/members/plans'),
+        fetchFromAPI('/analytics/attendance/heatmap')
+    ]);
+
+    // ── ADD THIS BLOCK TEMPORARILY ─────────────────────────
+    console.log('Growth:', growthRes);
+    console.log('Plans:', planRes);
+    console.log('Heatmap:', heatmapRes);
+    console.log('First row:', heatmapRes?.data?.[0]);
+    // ───────────────────────────────────────────────────────
+
+    // Render canvases now that data is ready
+    contentArea.innerHTML = `
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;">
+            <div class="card">
+                <p class="section-title" style="margin-bottom:16px;">Member Growth</p>
+                <canvas id="growthChart"></canvas>
+            </div>
+            <div class="card">
+                <p class="section-title" style="margin-bottom:16px;">Plan Distribution</p>
+                <canvas id="planChart"></canvas>
+            </div>
+            <div class="card" style="grid-column:1/-1;">
+                <p class="section-title" style="margin-bottom:16px;">
+                    Gym Traffic Heatmap
+                    <span style="font-size:0.75rem; color:#6b7280; font-weight:400; margin-left:8px;">
+                        visits by day & hour
+                    </span>
+                </p>
+                <canvas id="heatmapChart" style="max-height:200px;"></canvas>
+            </div>
+        </div>`;
+
+    // ── Chart 1: Member growth line chart ─────────────────────────
+    if (growthRes?.ok) {
+        const d = growthRes.data;
+        new Chart(document.getElementById('growthChart'), {
+            type: 'line',
+            data: {
+                labels: d.map(r => r.month),
+                datasets: [{
+                    label: 'New Members',
+                    data: d.map(r => r.new_members),
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99,102,241,0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#6366f1'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { labels: { color: '#9ca3af' } } },
+                scales: {
+                    x: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(255,255,255,0.04)' } },
+                    y: { ticks: { color: '#6b7280' }, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    // ── Chart 2: Plan distribution doughnut ───────────────────────
+    if (planRes?.ok) {
+        const d = planRes.data;
+        new Chart(document.getElementById('planChart'), {
+            type: 'doughnut',
+            data: {
+                labels: d.map(r => r.membership_plan),
+                datasets: [{
+                    data: d.map(r => r.count),
+                    backgroundColor: ['#6366f1', '#818cf8', '#a5b4fc'],
+                    borderColor: '#0f1117',
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { labels: { color: '#9ca3af', padding: 16 } }
+                }
+            }
+        });
+    }
+
+    // ── Chart 3: Heatmap as bar chart grouped by day ───────────────
+    if (heatmapRes?.ok) {
+        const d = heatmapRes.data;
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const colors = ['#6366f1','#818cf8','#a5b4fc','#c7d2fe','#4f46e5','#4338ca','#3730a3'];
+
+        // Group by day, sum visits per hour label
+        const hours = [...new Set(d.map(r => r.visit_hour))].sort((a,b) => a - b);
+        const datasets = days.map((day, i) => {
+            const dayNum = i + 1; // MySQL DAYOFWEEK: 1=Sun
+            return {
+                label: day,
+                data: hours.map(h => {
+                    const row = d.find(r => Number(r.day_of_week) === dayNum && Number(r.visit_hour) === h);
+                    return row ? row.visits : 0;
+                }),
+                backgroundColor: colors[i],
+                borderRadius: 3
+            };
+        });
+
+        new Chart(document.getElementById('heatmapChart'), {
+            type: 'bar',
+            data: {
+                labels: hours.map(h => `${h}:00`),
+                datasets
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { stacked: true, ticks: { color: '#6b7280' }, grid: { color: 'rgba(255,255,255,0.04)' } },
+                    y: { stacked: true, ticks: { color: '#6b7280' }, grid: { color: 'rgba(255,255,255,0.04)' } }
+                },
+                plugins: {
+                    legend: { labels: { color: '#9ca3af', boxWidth: 12 } }
+                }
+            }
+        });
+    }
+}
 // ── Profile (Member) ──────────────────────────────────────
 function loadProfileView() {
     if (!currentUser) return;
@@ -791,7 +939,7 @@ const MODAL_FIELDS = {
             { name: 'email',           type: 'email',    placeholder: 'Email Address',               required: true },
             { name: 'password',        type: 'password', placeholder: 'Password',                    required: true },
             { name: 'phone_number',    type: 'tel',      placeholder: 'Phone Number' },
-            { name: 'membership_plan', type: 'select',     options: ['Monthly','Quaterly','Yearly'],   required: true }
+            { name: 'membership_plan', type: 'select',   options: ['Monthly','Quarterly','Yearly'],  required: true }
         ]
     },
     employee: {
