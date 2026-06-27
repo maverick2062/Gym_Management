@@ -1,22 +1,21 @@
-# Python
-__pycache__/
-*.pyc
-
-# Environment
-venv/
+# Secrets
 .env
 
-# IDE / Editor specific
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
 .vscode/
 .idea/
 
-# Random Data seeded
-.seed_database.py
-
-# A seperate file for adding the data to attendance table due error in the seed file
-.import_attendance.py
 .features.txt
 .ideas.txt
 .learnings.txt
-#Kaggle dataset
-.gym_traffic_data.csv
